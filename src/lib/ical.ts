@@ -24,8 +24,8 @@ export type IcsEvent = {
 export function eventToIcal(event: IcsEvent): string {
 	let icsContent = 'BEGIN:VEVENT\n';
 	icsContent += `SUMMARY:${event.title}\n`;
-	icsContent += `DTSTART:${event.startTime}\n`;
-	icsContent += `DTEND:${event.endTime}\n`;
+	icsContent += `DTSTART;TZID=America/Chicago:${event.startTime}\n`;
+	icsContent += `DTEND;TZID=America/Chicago:${event.endTime}\n`;
 	icsContent += `DTSTAMP:${event.stamp}\n`;
 	icsContent += `LOCATION:${event.location}\n`;
 	if (event.description) {
