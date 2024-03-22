@@ -26,7 +26,7 @@
 				removeEventListener('click', clickHandler);
 			}, 150);
 		};
-
+		a.addEventListener('click', clickHandler, false);
 		a.click();
 		// note that a is never added to the DOM
 	}
