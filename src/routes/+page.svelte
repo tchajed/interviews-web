@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { fetchSheet } from '$lib/fetch_sheet';
-	import { icsFromSheetData } from '$lib/schedule';
+	import { type Calendar, eventsToIcs, sheetDataToCalendar } from '$lib/schedule';
 	import { Heading, Input, Label, Button, Helper } from 'flowbite-svelte';
 	let url: string = '';
-	let ics: string | null = null;
+	let cal: Calendar | null = null;
 	let validColor: 'green' | 'red' | undefined = undefined;
 	$: {
-		if (ics != null) {
+		if (cal != null) {
 			validColor = 'green';
 		} else {
 			validColor = undefined;
@@ -32,16 +32,16 @@
 	}
 
 	function handleDownload() {
-		if (!ics) return;
-		const blob = new Blob([ics], { type: 'text/calendar' });
-		downloadBlob(blob, 'schedule.ics');
+		if (!cal) return;
+		const blob = new Blob([eventsToIcs(cal.events)], { type: 'text/calendar' });
+		downloadBlob(blob, `${cal.title} - schedule.ics`);
 	}
 
 	// TODO: doesn't handle debouncing
 	$: if (url != '') {
 		// TODO: handle and report errors
 		fetchSheet(url).then((data) => {
-			ics = icsFromSheetData(data);
+			cal = sheetDataToCalendar(data);
 		});
 	}
 </script>
@@ -60,7 +60,7 @@
 			placeholder="https://docs.google.com/..."
 			required
 		/>
-		{#if ics != null}
+		{#if cal != null}
 			<Helper class="mt-2" color="green">
 				<span class="font-medium">Schedule generated</span>
 			</Helper>

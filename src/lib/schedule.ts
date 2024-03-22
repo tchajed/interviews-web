@@ -1,45 +1,4 @@
-function pad(n: number, width: number) {
-	return String(n).padStart(width, '0');
-}
-
-function dateToIcal(date: string | Date) {
-	const d = new Date(date);
-	return pad(d.getFullYear(), 4) + pad(d.getMonth() + 1, 2) + pad(d.getDate(), 2);
-}
-
-function parseTime(time: string): { h: number; m: number } {
-	let h = parseInt(time.split(':')[0]);
-	const m = parseInt(time.split(':')[1]);
-	// heuristic for am/pm
-	if (h <= 7) {
-		h = h + 12;
-	}
-	return { h, m };
-}
-
-function timeToIcal(time: string | { h: number; m: number }) {
-	if (typeof time == 'string') {
-		time = parseTime(time);
-	}
-	const s = 0;
-	return pad(time.h, 2) + pad(time.m, 2) + pad(s, 2);
-}
-
-function startEndToIcal(
-	eventDate: Date,
-	startTime: { h: number; m: number },
-	endTime: { h: number; m: number }
-): { start: string; end: string } {
-	const startDateTime = dateToIcal(eventDate) + 'T' + timeToIcal(startTime); // local time, not UTC
-	const endDateTime = dateToIcal(eventDate) + 'T' + timeToIcal(endTime);
-	return { start: startDateTime, end: endDateTime };
-}
-
-function timeRangeToIcal(eventDate: Date, timeRange: string): { start: string; end: string } {
-	const startTime = timeRange.split('-')[0];
-	const endTime = timeRange.split('-')[1];
-	return startEndToIcal(eventDate, parseTime(startTime), parseTime(endTime));
-}
+import { eventToIcal, dateToIcal, timeToIcal, type IcsEvent } from './ical';
 
 function parseRow(data: string[]): {
 	timeRange: string;
@@ -55,14 +14,50 @@ function parseRow(data: string[]): {
 	};
 }
 
-export function icsFromSheetData(data: string[][]): string {
+function parseTime(time: string): { h: number; m: number } {
+	let h = parseInt(time.split(':')[0]);
+	const m = parseInt(time.split(':')[1]);
+	// heuristic for am/pm
+	if (h <= 7) {
+		h = h + 12;
+	}
+	return { h, m };
+}
+
+function startEndToIcal(
+	eventDate: Date,
+	startTime: { h: number; m: number },
+	endTime: { h: number; m: number }
+): { start: string; end: string } {
+	const startDateTime = dateToIcal(eventDate) + 'T' + timeToIcal(startTime); // local time, not UTC
+	const endDateTime = dateToIcal(eventDate) + 'T' + timeToIcal(endTime);
+	return { start: startDateTime, end: endDateTime };
+}
+
+export function timeRangeToIcal(
+	eventDate: Date,
+	timeRange: string
+): { start: string; end: string } {
+	const startTime = timeRange.split('-')[0];
+	const endTime = timeRange.split('-')[1];
+	return startEndToIcal(eventDate, parseTime(startTime), parseTime(endTime));
+}
+
+export type Calendar = {
+	title: string;
+	events: IcsEvent[];
+	warnings: string[];
+};
+
+export function sheetDataToCalendar(data: string[][]): Calendar {
+	// cell A1
+	const sheetTitle = data[0][0];
+
 	// cell C1
 	const eventDate = new Date(data[0][2]);
-	let icsContent = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//UW-Madison//EN\n';
 
 	const now = new Date();
-	const dtstamp =
-		dateToIcal(now) + 'T' + pad(now.getHours(), 2) + pad(now.getMinutes(), 2) + pad(0, 2);
+	const dtstamp = dateToIcal(now) + 'T' + timeToIcal({ h: now.getHours(), m: now.getMinutes() });
 
 	// Find header row
 	let startRow = -1;
@@ -73,9 +68,11 @@ export function icsFromSheetData(data: string[][]): string {
 		}
 	}
 	if (startRow < 0) {
-		throw new Error(`could not find "Time" header`);
+		return { title: sheetTitle, events: [], warnings: ['could not find Time header'] };
 	}
 
+	const events: IcsEvent[] = [];
+	const warnings: string[] = [];
 	// startRow+1 to skip header row
 	for (let i = startRow + 1; i < data.length; i++) {
 		const parsed = parseRow(data[i]);
@@ -115,7 +112,7 @@ export function icsFromSheetData(data: string[][]): string {
 						m: time.m
 					});
 				} else {
-					Logger.log(`Warning: could not find time for dinner`);
+					warnings.push('could not find time for dinner');
 					continue;
 				}
 			}
@@ -126,24 +123,23 @@ export function icsFromSheetData(data: string[][]): string {
 			startEnd = timeRangeToIcal(eventDate, timeRange);
 		}
 
-		// Convert time to a suitable format for ICS
-
-		// Append event details to ICS content
-		icsContent += 'BEGIN:VEVENT\n';
-		icsContent += `SUMMARY:${title}\n`;
-		icsContent += `DTSTART:${startEnd.start}\n`;
-		icsContent += `DTEND:${startEnd.end}\n`;
-		icsContent += `DTSTAMP:${dtstamp}\n`;
-		if (notes != '') {
-			icsContent += `DESCRIPTION:${notes}\n`;
-		}
-		icsContent += `LOCATION:${room}\n`;
-		icsContent += `UID:${crypto.randomUUID()}\n`;
-		icsContent += 'END:VEVENT\n';
+		events.push({
+			title,
+			stamp: dtstamp,
+			startTime: startEnd.start,
+			endTime: startEnd.end,
+			location: room,
+			description: notes
+		});
 	}
+	return { title: sheetTitle, events, warnings };
+}
 
-	// Close the ICS file format
+export function eventsToIcs(events: IcsEvent[]): string {
+	let icsContent = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//UW-Madison//EN\n';
+	for (const event of events) {
+		icsContent += eventToIcal(event);
+	}
 	icsContent += 'END:VCALENDAR';
-
 	return icsContent;
 }
