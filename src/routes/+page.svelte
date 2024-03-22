@@ -1,25 +1,25 @@
 <script lang="ts">
 	import { fetchSheet } from '$lib/fetch_sheet';
 	import { icsFromSheetData } from '$lib/schedule';
-	import { Heading, Input, Label, Button } from 'flowbite-svelte';
+	import { Heading, Input, Label, Button, Helper } from 'flowbite-svelte';
 	let url: string = '';
 	let ics: string | null = null;
+	let validColor: 'green' | 'red' | undefined = undefined;
+	$: {
+		if (ics != null) {
+			validColor = 'green';
+		} else {
+			validColor = undefined;
+		}
+	}
 
 	function downloadBlob(blob: Blob, filename: string) {
-		// Create an object URL for the blob object
 		const url = URL.createObjectURL(blob);
-
-		// Create a new anchor element
 		const a = document.createElement('a');
-
-		// Set the href and download attributes for the anchor element
-		// You can optionally set other attributes like `title`, etc
-		// Especially, if the anchor element will be attached to the DOM
 		a.href = url;
 		a.download = filename;
 
 		// Click handler that releases the object URL after the element has been clicked
-		// This is required for one-off downloads of the blob content
 		const clickHandler = () => {
 			setTimeout(() => {
 				URL.revokeObjectURL(url);
@@ -28,6 +28,7 @@
 		};
 
 		a.click();
+		// note that a is never added to the DOM
 	}
 
 	function handleDownload() {
@@ -38,6 +39,7 @@
 
 	// TODO: doesn't handle debouncing
 	$: if (url != '') {
+		// TODO: handle and report errors
 		fetchSheet(url).then((data) => {
 			ics = icsFromSheetData(data);
 		});
@@ -48,15 +50,21 @@
 
 <form>
 	<div class="mb-4">
-		<Label class="mb-2" for="url">Sheet URL</Label>
+		<Label class="mb-2" color={validColor} for="url">Sheet URL</Label>
 		<Input
 			type="text"
 			bind:value={url}
 			id="url"
 			name="url"
+			color={validColor}
 			placeholder="https://docs.google.com/..."
 			required
 		/>
+		{#if ics != null}
+			<Helper class="mt-2" color="green">
+				<span class="font-medium">Schedule generated</span>
+			</Helper>
+		{/if}
 	</div>
 	<div class="mb-6">
 		<Button on:click={handleDownload}>Download ICS</Button>
