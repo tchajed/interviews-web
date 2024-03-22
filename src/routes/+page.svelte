@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fetchSheet } from '$lib/fetch_sheet';
 	import { type Calendar, eventsToIcs, sheetDataToCalendar } from '$lib/schedule';
-	import { Heading, Input, Label, Button, Helper } from 'flowbite-svelte';
+	import { Heading, Card, Input, Label, Button, Helper, Li, List } from 'flowbite-svelte';
 	let url: string = '';
 	let cal: Calendar | null = null;
 	let validColor: 'green' | 'red' | undefined = undefined;
@@ -34,7 +34,7 @@
 	function handleDownload() {
 		if (!cal) return;
 		const blob = new Blob([eventsToIcs(cal.events)], { type: 'text/calendar' });
-		downloadBlob(blob, `${cal.title} - schedule.ics`);
+		downloadBlob(blob, `${cal.title} - UW-Madison.ics`);
 	}
 
 	// TODO: doesn't handle debouncing
@@ -69,6 +69,16 @@
 	<div class="mb-6">
 		<Button on:click={handleDownload}>Download ICS</Button>
 	</div>
+	{#if cal != null}
+		<Heading tag="h4" class="mb-4">{cal.title}</Heading>
+		<List tag="ul" class="space-y-1 text-gray-500">
+			{#each cal.events as event}
+				<Li>
+					<span class="font-medium">{event.title}</span> &mdash; {event.location}
+				</Li>
+			{/each}
+		</List>
+	{/if}
 </form>
 
 <style>

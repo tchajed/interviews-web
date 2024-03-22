@@ -55,6 +55,7 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 
 	// cell C1
 	const eventDate = new Date(data[0][2]);
+	eventDate.setFullYear(new Date().getFullYear());
 
 	const now = new Date();
 	const dtstamp = dateToIcal(now) + 'T' + timeToIcal({ h: now.getHours(), m: now.getMinutes() });

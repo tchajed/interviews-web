@@ -13,7 +13,7 @@ function parseSheetUrl(url: string): { id: string; gid: string } | null {
 }
 
 function tsvToData(tsv: string): string[][] {
-	const rows = tsv.split('\n').map((line) => line.split('\t'));
+	const rows = tsv.split('\n').map((line) => line.trim().split('\t'));
 	const maxLength = Math.max(...rows.map((row) => row.length));
 	for (let i = 0; i < rows.length; i++) {
 		while (rows[i].length < maxLength) {
@@ -35,5 +35,7 @@ export async function fetchSheet(url: string): Promise<string[][]> {
 		throw new Error(`could not parse url: ${url}`);
 	}
 	const { id, gid } = parsed;
-	return tsvToData(await fetchRawSheet(id, gid));
+	const tsv = await fetchRawSheet(id, gid);
+	console.log(tsv);
+	return tsvToData(tsv);
 }
