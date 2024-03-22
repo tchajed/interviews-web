@@ -15,7 +15,10 @@ const config = {
 			pages: 'build',
 			assets: 'build',
 			strict: true,
-		})
+		}),
+		paths: {
+			base: "/interview-ics"
+		}
 	}
 };
 
