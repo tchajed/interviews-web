@@ -69,7 +69,7 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 		}
 	}
 	if (startRow < 0) {
-		return { title: sheetTitle, events: [], warnings: ['could not find Time header'] };
+		return { title: '', events: [], warnings: ['could not find header row'] };
 	}
 
 	const events: IcsEvent[] = [];

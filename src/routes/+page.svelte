@@ -1,15 +1,20 @@
 <script lang="ts">
 	import { fetchSheet } from '$lib/fetch_sheet';
 	import { type Calendar, eventsToIcs, sheetDataToCalendar } from '$lib/schedule';
-	import { Heading, Card, Input, Label, Button, Helper, Li, List } from 'flowbite-svelte';
+	import { Heading, Input, Label, Button, Helper, Li, List } from 'flowbite-svelte';
 	let url: string = '';
 	let cal: Calendar | null = null;
+	let fetchError: string | null = null;
 	let validColor: 'green' | 'red' | undefined = undefined;
 	$: {
 		if (cal != null) {
 			validColor = 'green';
 		} else {
-			validColor = undefined;
+			if (fetchError != null) {
+				validColor = 'red';
+			} else {
+				validColor = undefined;
+			}
 		}
 	}
 
@@ -39,10 +44,20 @@
 
 	// TODO: doesn't handle debouncing
 	$: if (url != '') {
+		fetchError = null;
 		// TODO: handle and report errors
-		fetchSheet(url).then((data) => {
-			cal = sheetDataToCalendar(data);
-		});
+		fetchSheet(url)
+			.then((data) => {
+				cal = sheetDataToCalendar(data);
+			})
+			.catch((err) => {
+				cal = null;
+				if (err instanceof Error) {
+					fetchError = err.message;
+				} else {
+					fetchError = 'Unknown error';
+				}
+			});
 	}
 </script>
 
@@ -64,10 +79,22 @@
 			<Helper class="mt-2" color="green">
 				<span class="font-medium">Schedule generated</span>
 			</Helper>
+			{#each cal.warnings as warning}
+				<Helper class="mt-2" color="red">
+					<span class="font-medium">Warning:</span>
+					{warning}
+				</Helper>
+			{/each}
+		{/if}
+		{#if fetchError != null}
+			<Helper class="mt-2" color="red">
+				<span class="font-medium">Error:</span>
+				{fetchError}
+			</Helper>
 		{/if}
 	</div>
 	<div class="mb-6">
-		<Button on:click={handleDownload}>Download ICS</Button>
+		<Button disabled={cal == null} on:click={handleDownload}>Download ICS</Button>
 	</div>
 	{#if cal != null}
 		<Heading tag="h4" class="mb-4">{cal.title}</Heading>
