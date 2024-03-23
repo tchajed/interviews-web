@@ -57,8 +57,8 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 	const eventDate = new Date(data[0][2]);
 	eventDate.setFullYear(new Date().getFullYear());
 
-	const now = new Date();
-	const dtstamp = dateToIcal(now) + 'T' + timeToIcal({ h: now.getHours(), m: now.getMinutes() });
+	// event creation time stamp
+	const stamp = new Date();
 
 	// Find header row
 	let startRow = -1;
@@ -78,7 +78,8 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 	for (let i = startRow + 1; i < data.length; i++) {
 		const parsed = parseRow(data[i]);
 		let { timeRange } = parsed;
-		const { person, room, notes } = parsed;
+		const { person, notes } = parsed;
+		const location = parsed.room;
 
 		let title = person;
 		if (title == '' || title == 'BREAK') {
@@ -126,10 +127,10 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 
 		events.push({
 			title,
-			stamp: dtstamp,
+			stamp,
 			startTime: startEnd.start,
 			endTime: startEnd.end,
-			location: room,
+			location,
 			description: notes
 		});
 	}

@@ -12,9 +12,13 @@ export function timeToIcal(time: { h: number; m: number }): string {
 	return pad(time.h, 2) + pad(time.m, 2) + pad(s, 2);
 }
 
+function datetimeToIcal(date: Date): string {
+	return dateToIcal(date) + 'T' + timeToIcal({ h: date.getHours(), m: date.getMinutes() });
+}
+
 export type IcsEvent = {
 	title: string;
-	stamp: string; // DTSTAMP (when the event was created)
+	stamp: Date; // DTSTAMP (when the event was created)
 	startTime: string;
 	endTime: string;
 	description?: string;
@@ -26,7 +30,7 @@ export function eventToIcal(event: IcsEvent): string {
 	icsContent += `SUMMARY:${event.title}\n`;
 	icsContent += `DTSTART;TZID=America/Chicago:${event.startTime}\n`;
 	icsContent += `DTEND;TZID=America/Chicago:${event.endTime}\n`;
-	icsContent += `DTSTAMP:${event.stamp}\n`;
+	icsContent += `DTSTAMP:${datetimeToIcal(event.stamp)}\n`;
 	icsContent += `LOCATION:${event.location}\n`;
 	if (event.description) {
 		icsContent += `DESCRIPTION:${event.description}\n`;
