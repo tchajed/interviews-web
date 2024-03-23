@@ -19,8 +19,8 @@ function datetimeToIcal(date: Date): string {
 export type IcsEvent = {
 	title: string;
 	stamp: Date; // DTSTAMP (when the event was created)
-	startTime: string;
-	endTime: string;
+	startTime: Date;
+	endTime: Date;
 	description?: string;
 	location: string;
 };
@@ -28,8 +28,8 @@ export type IcsEvent = {
 export function eventToIcal(event: IcsEvent): string {
 	let icsContent = 'BEGIN:VEVENT\n';
 	icsContent += `SUMMARY:${event.title}\n`;
-	icsContent += `DTSTART;TZID=America/Chicago:${event.startTime}\n`;
-	icsContent += `DTEND;TZID=America/Chicago:${event.endTime}\n`;
+	icsContent += `DTSTART;TZID=America/Chicago:${datetimeToIcal(event.startTime)}\n`;
+	icsContent += `DTEND;TZID=America/Chicago:${datetimeToIcal(event.endTime)}\n`;
 	icsContent += `DTSTAMP:${datetimeToIcal(event.stamp)}\n`;
 	icsContent += `LOCATION:${event.location}\n`;
 	if (event.description) {

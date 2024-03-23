@@ -1,4 +1,4 @@
-import { eventToIcal, dateToIcal, timeToIcal, type IcsEvent } from './ical';
+import { eventToIcal, type IcsEvent } from './ical';
 
 function parseRow(data: string[]): {
 	timeRange: string;
@@ -24,23 +24,21 @@ function parseTime(time: string): { h: number; m: number } {
 	return { h, m };
 }
 
-function startEndToIcal(
-	eventDate: Date,
-	startTime: { h: number; m: number },
-	endTime: { h: number; m: number }
-): { start: string; end: string } {
-	const startDateTime = dateToIcal(eventDate) + 'T' + timeToIcal(startTime); // local time, not UTC
-	const endDateTime = dateToIcal(eventDate) + 'T' + timeToIcal(endTime);
-	return { start: startDateTime, end: endDateTime };
+function dateWithTime(date: Date, time: { h: number; m: number }): Date {
+	const d = new Date(date);
+	d.setHours(time.h);
+	d.setMinutes(time.m);
+	return d;
 }
 
-export function timeRangeToIcal(
-	eventDate: Date,
-	timeRange: string
-): { start: string; end: string } {
-	const startTime = timeRange.split('-')[0];
-	const endTime = timeRange.split('-')[1];
-	return startEndToIcal(eventDate, parseTime(startTime), parseTime(endTime));
+export function timeRangeToIcal(eventDate: Date, timeRange: string): { start: Date; end: Date } {
+	const startTime = parseTime(timeRange.split('-')[0]);
+	const start = dateWithTime(eventDate, startTime);
+
+	const endTime = parseTime(timeRange.split('-')[1]);
+	const end = dateWithTime(eventDate, endTime);
+
+	return { start, end };
 }
 
 export type Calendar = {
@@ -95,24 +93,24 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 		if (timeRange == 'Pickup/Breakfast') {
 			timeRange = '8:00-9:00';
 		}
-		let startEnd: { start: string; end: string };
+		let startEnd: { start: Date; end: Date };
 		if (timeRange == 'DINNER') {
 			// try to get a time from the notes
 			let m = /[0-9]+:[0-9]+/.exec(notes);
 			if (m) {
 				const time = parseTime(m[0]);
-				startEnd = startEndToIcal(eventDate, time, {
-					h: time.h + 2,
-					m: time.m
-				});
+				startEnd = {
+					start: dateWithTime(eventDate, time),
+					end: dateWithTime(eventDate, { h: time.h + 2, m: time.m })
+				};
 			} else {
 				m = /[0-9]+(pm|PM)/.exec(notes);
 				if (m) {
 					const time = { h: parseInt(m[0]) + 12, m: 0 };
-					startEnd = startEndToIcal(eventDate, time, {
-						h: time.h + 2,
-						m: time.m
-					});
+					startEnd = {
+						start: dateWithTime(eventDate, time),
+						end: dateWithTime(eventDate, { h: time.h + 2, m: time.m })
+					};
 				} else {
 					warnings.push('could not find time for dinner');
 					continue;
