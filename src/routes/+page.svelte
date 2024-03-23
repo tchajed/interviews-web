@@ -101,7 +101,10 @@
 		<List tag="ul" class="space-y-1 text-gray-500">
 			{#each cal.events as event}
 				<Li>
-					<span class="font-medium">{event.title}</span> &mdash; {event.location}
+					<span class="font-medium">{event.title}</span>
+					{#if event.location != ''}
+						&mdash; {event.location}
+					{/if}
 				</Li>
 			{/each}
 		</List>
