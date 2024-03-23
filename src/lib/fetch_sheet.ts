@@ -1,5 +1,5 @@
 function parseSheetUrl(url: string): { id: string; gid: string } | null {
-	const re = new RegExp('https://docs.google.com/spreadsheets/d/([^/]+)/edit#gid=([0-9]+)');
+	const re = new RegExp('^https://docs.google.com/spreadsheets/d/([^/]+)/edit#gid=([0-9]+)');
 	const m = re.exec(url);
 	if (!m) {
 		return null;
@@ -35,7 +35,11 @@ function fetchRawSheet(id: string, gid: string): Promise<string> {
 export async function fetchSheet(url: string): Promise<string[][]> {
 	const parsed = parseSheetUrl(url);
 	if (!parsed) {
-		throw new Error(`could not parse URL`);
+		const looserRe = new RegExp('^https://docs.google.com/spreadsheets/d/([^/]+)/?.*');
+		if (!looserRe.exec(url)) {
+			throw new Error(`could not parse URL`);
+		}
+		throw new Error(`could not parse sheet URL (missing #gid=)`);
 	}
 	const { id, gid } = parsed;
 	const tsv = await fetchRawSheet(id, gid);
