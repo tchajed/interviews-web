@@ -14,10 +14,10 @@ const config = {
 		adapter: adapter({
 			pages: 'build',
 			assets: 'build',
-			strict: true,
+			strict: true
 		}),
 		paths: {
-			base: "/interview-ics"
+			base: '/interview-ics'
 		}
 	}
 };
