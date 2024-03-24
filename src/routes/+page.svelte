@@ -2,6 +2,7 @@
 	import { fetchSheet } from '$lib/fetch_sheet';
 	import { type Calendar, eventsToIcs, sheetDataToCalendar } from '$lib/schedule';
 	import { Heading, Input, Label, Button, Helper, Li, List } from 'flowbite-svelte';
+	import { CalendarMonthSolid } from 'flowbite-svelte-icons';
 	let url: string = '';
 	let cal: Calendar | null = null;
 	let fetchError: string | null = null;
@@ -16,6 +17,22 @@
 				validColor = undefined;
 			}
 		}
+	}
+
+	function formatTime(d: Date): string {
+		let h = d.getHours();
+		if (h > 12) {
+			h -= 12;
+		}
+		return `${h}:${d.getMinutes().toString().padStart(2, '0')}`;
+	}
+
+	function formatDate(d: Date): string {
+		// TODO: want nicer format (day of week, short month)
+		const y = d.getFullYear();
+		const m = (d.getMonth() + 1).toString().padStart(2, '0');
+		const day = d.getDate().toString().padStart(2, '0');
+		return `${y}-${m}-${day}`;
 	}
 
 	function downloadBlob(blob: Blob, filename: string) {
@@ -63,53 +80,55 @@
 
 <Heading tag="h2" class="mb-12">Interview to calendar export</Heading>
 
-<form>
-	<div class="mb-4">
-		<Label class="mb-2" color={validColor} for="url">Sheet URL</Label>
-		<Input
-			type="text"
-			bind:value={url}
-			id="url"
-			name="url"
-			color={validColor}
-			placeholder="https://docs.google.com/..."
-			required
-		/>
-		{#if cal != null}
-			<Helper class="mt-2" color="green">
-				<span class="font-medium">Schedule generated</span>
-			</Helper>
-			{#each cal.warnings as warning}
-				<Helper class="mt-2" color="red">
-					<span class="font-medium">Warning:</span>
-					{warning}
-				</Helper>
-			{/each}
-		{/if}
-		{#if fetchError != null}
-			<Helper class="mt-2" color="red">
-				<span class="font-medium">Error:</span>
-				{fetchError}
-			</Helper>
-		{/if}
-	</div>
-	<div class="mb-6">
-		<Button disabled={cal == null} on:click={handleDownload}>Download ICS</Button>
-	</div>
+<div class="mb-4">
+	<Label class="mb-2" color={validColor} for="url">Schedule sheet URL</Label>
+	<Input
+		type="text"
+		bind:value={url}
+		id="url"
+		name="url"
+		color={validColor}
+		placeholder="https://docs.google.com/..."
+		required
+	/>
 	{#if cal != null}
-		<Heading tag="h4" class="mb-4">{cal.title}</Heading>
-		<List tag="ul" class="space-y-1 text-gray-500">
-			{#each cal.events as event}
-				<Li>
-					<span class="font-medium">{event.title}</span>
-					{#if event.location != ''}
-						&mdash; {event.location}
-					{/if}
-				</Li>
-			{/each}
-		</List>
+		<Helper class="mt-2" color="green">
+			<span class="font-medium">Schedule generated</span>
+		</Helper>
+		{#each cal.warnings as warning}
+			<Helper class="mt-2" color="red">
+				<span class="font-medium">Warning:</span>
+				{warning}
+			</Helper>
+		{/each}
 	{/if}
-</form>
+	{#if fetchError != null}
+		<Helper class="mt-2" color="red">
+			<span class="font-medium">Error:</span>
+			{fetchError}
+		</Helper>
+	{/if}
+</div>
+<div class="mb-6">
+	<Button disabled={cal == null} on:click={handleDownload}>
+		<CalendarMonthSolid class="me-2 h-4 w-4" />
+		Download ICS
+	</Button>
+</div>
+{#if cal != null}
+	<Heading tag="h4" class="mb-4">{cal.title} &mdash; {formatDate(cal.events[0].startTime)}</Heading>
+	<List tag="ul" class="space-y-1 text-gray-500">
+		{#each cal.events as event}
+			<Li>
+				{formatTime(event.startTime)}-{formatTime(event.endTime)} &mdash;
+				<span class="font-medium">{event.title}</span>
+				{#if event.location != ''}
+					&mdash; {event.location}
+				{/if}
+			</Li>
+		{/each}
+	</List>
+{/if}
 
 <style>
 	:global(body) {
