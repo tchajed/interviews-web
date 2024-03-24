@@ -88,13 +88,11 @@
 		id="url"
 		name="url"
 		color={validColor}
+		size="sm"
 		placeholder="https://docs.google.com/..."
 		required
 	/>
 	{#if cal != null}
-		<Helper class="mt-2" color="green">
-			<span class="font-medium">Schedule generated</span>
-		</Helper>
 		{#each cal.warnings as warning}
 			<Helper class="mt-2" color="red">
 				<span class="font-medium">Warning:</span>
