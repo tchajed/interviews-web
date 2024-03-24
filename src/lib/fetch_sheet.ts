@@ -21,7 +21,7 @@ function tsvToData(tsv: string): string[][] {
 	return rows;
 }
 
-function fetchRawSheet(id: string, gid: string): Promise<string> {
+function fetchRawTsv(id: string, gid: string): Promise<string> {
 	return fetch(`https://docs.google.com/spreadsheets/d/${id}/export?gid=${gid}&format=tsv`).then(
 		(resp) => {
 			if (!resp.ok) {
@@ -32,7 +32,7 @@ function fetchRawSheet(id: string, gid: string): Promise<string> {
 	);
 }
 
-export async function fetchSheet(url: string): Promise<string[][]> {
+export async function fetchSheetTsv(url: string): Promise<string[][]> {
 	const parsed = parseSheetUrl(url);
 	if (!parsed) {
 		const looserRe = new RegExp('^https://docs.google.com/spreadsheets/d/([^/]+)/?.*');
@@ -42,6 +42,6 @@ export async function fetchSheet(url: string): Promise<string[][]> {
 		throw new Error(`could not parse sheet URL (missing #gid=)`);
 	}
 	const { id, gid } = parsed;
-	const tsv = await fetchRawSheet(id, gid);
+	const tsv = await fetchRawTsv(id, gid);
 	return tsvToData(tsv);
 }

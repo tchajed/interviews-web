@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fetchSheet } from '$lib/fetch_sheet';
+	import { fetchSheetTsv } from '$lib/fetch_sheet';
 	import { type Calendar, eventsToIcs, sheetDataToCalendar } from '$lib/schedule';
 	import { Heading, Input, Label, Button, Helper, Li, List } from 'flowbite-svelte';
 	import { CalendarMonthSolid } from 'flowbite-svelte-icons';
@@ -63,7 +63,7 @@
 	$: if (url != '') {
 		fetchError = null;
 		// TODO: handle and report errors
-		fetchSheet(url)
+		fetchSheetTsv(url)
 			.then((data) => {
 				cal = sheetDataToCalendar(data);
 			})
