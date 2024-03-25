@@ -12,7 +12,6 @@ function getScheduleSheets(masterHtml: string): string[] {
 			return;
 		}
 		if (re.test(href)) {
-			console.log("found url", href);
 			urls.push(href);
 		}
 	});
@@ -27,6 +26,7 @@ async function getSchedules(urls: string[]): Promise<Schedule[]> {
 			continue;
 		}
 		scheds.push(sheetDataToSchedule(tsv));
+		// TODO: remove, only for debugging
 		if (scheds.length >= 5) {
 			break;
 		}
@@ -54,16 +54,17 @@ function classifyEvent(row: ScheduleRow): PartType {
 	return "1:1";
 }
 
+const IgnoredNames = new RegExp(`(BREAK|TALK|TALK PREP)|(^$)`, "i");
+
 export async function getParticipationEvents(masterHtml: string): Promise<ParticipationEvent[]> {
 	const urls = getScheduleSheets(masterHtml);
 	const schedules = await getSchedules(urls);
 	const events: ParticipationEvent[] = [];
 	const re = new RegExp("\\s*[,+;]\\s*");
 	for (const sched of schedules) {
-		console.log(sched);
 		for (const event of sched.events) {
 			const type = classifyEvent(event);
-			if (event.person == "") {
+			if (IgnoredNames.test(event.person)) {
 				continue;
 			}
 			event.person.split(re).forEach((name) => {

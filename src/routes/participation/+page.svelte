@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fetchSheetHtml } from "$lib/fetch_sheet";
 	import { getParticipationEvents } from "$lib/participation";
-	import { Heading, Helper, Input, Label, Li, List } from "flowbite-svelte";
+	import { Heading, Helper, Input, Label, Li, List, Spinner } from "flowbite-svelte";
 	let url: string = "";
 	let sheetHtml: string | null = null;
 	let fetchError: string | null = null;
@@ -20,16 +20,18 @@
 		}
 	}
 
-	$: if (url != "") {
-		fetchError = null;
-		fetchSheetHtml(url, "Schedule")
-			.then((html) => {
-				sheetHtml = html;
-			})
-			.catch((err) => {
-				fetchError = err.message;
-				sheetHtml = null;
-			});
+	$: {
+		if (url != "") {
+			fetchError = null;
+			fetchSheetHtml(url, "Schedule")
+				.then((html) => {
+					sheetHtml = html;
+				})
+				.catch((err) => {
+					fetchError = err.message;
+					sheetHtml = null;
+				});
+		}
 	}
 </script>
 
@@ -44,6 +46,7 @@
 		id="url"
 		name="url"
 		size="sm"
+		class="mb-4"
 		placeholder="https://docs.google.com/..."
 		required
 	/>
@@ -52,7 +55,7 @@
 	{/if}
 	{#if sheetHtml}
 		{#await getParticipationEvents(sheetHtml)}
-			Loading...
+			<Spinner />
 		{:then evs}
 			<List tag="ul">
 				{#each evs as ev}
