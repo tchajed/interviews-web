@@ -31,7 +31,7 @@ function dateWithTime(date: Date, time: { h: number; m: number }): Date {
 	return d;
 }
 
-export function timeRangeToIcal(eventDate: Date, timeRange: string): { start: Date; end: Date } {
+function timeRangeToIcal(eventDate: Date, timeRange: string): { start: Date; end: Date } {
 	const startTime = parseTime(timeRange.split("-")[0]);
 	const start = dateWithTime(eventDate, startTime);
 
