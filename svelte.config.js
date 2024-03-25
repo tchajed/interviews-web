@@ -17,7 +17,7 @@ const config = {
 			strict: true,
 		}),
 		paths: {
-			base: "/interview-ics",
+			base: "/interviews",
 		},
 	},
 };
