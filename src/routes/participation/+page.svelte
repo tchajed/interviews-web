@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fetchSheetHtml } from "$lib/fetch_sheet";
-	import { getScheduleSheets } from "$lib/participation";
+	import { getParticipationEvents } from "$lib/participation";
 	import { Heading, Helper, Input, Label, Li, List } from "flowbite-svelte";
 	let url: string = "";
 	let sheetHtml: string | null = null;
@@ -51,10 +51,14 @@
 		<Helper color="red"><span class="font-medium">Error:</span> {fetchError}</Helper>
 	{/if}
 	{#if sheetHtml}
-		<List tag="ul">
-			{#each getScheduleSheets(sheetHtml) as url}
-				<Li>{url}</Li>
-			{/each}
-		</List>
+		{#await getParticipationEvents(sheetHtml)}
+			Loading...
+		{:then evs}
+			<List tag="ul">
+				{#each evs as ev}
+					<Li>{ev.name} &mdash; {ev.type}</Li>
+				{/each}
+			</List>
+		{/await}
 	{/if}
 </div>

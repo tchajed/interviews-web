@@ -1,11 +1,13 @@
 import { eventToIcal, type IcsEvent } from "./ical";
 
-function parseRow(data: string[]): {
+export type ScheduleRow = {
 	timeRange: string;
 	person: string;
 	room: string;
 	notes: string;
-} {
+};
+
+function parseRow(data: string[]): ScheduleRow {
 	return {
 		timeRange: data[0],
 		person: data[1],
@@ -41,22 +43,23 @@ function timeRangeToIcal(eventDate: Date, timeRange: string): { start: Date; end
 	return { start, end };
 }
 
-export type Calendar = {
+export type Schedule = {
 	title: string;
-	events: IcsEvent[];
+	date: Date;
+	events: ScheduleRow[];
 	warnings: string[];
 };
 
-export function sheetDataToCalendar(data: string[][]): Calendar {
+export function sheetDataToSchedule(data: string[][]): Schedule {
 	// cell A1
-	const sheetTitle = data[0][0];
+	const title = data[0][0];
 
 	// cell C1
-	const eventDate = new Date(data[0][2]);
-	eventDate.setFullYear(new Date().getFullYear());
-
-	// event creation time stamp
-	const stamp = new Date();
+	if (data[0][2] == "") {
+		return { title, date: new Date(), events: [], warnings: ["could not find date"] };
+	}
+	const date = new Date(data[0][2]);
+	date.setFullYear(new Date().getFullYear());
 
 	// Find header row
 	let startRow = -1;
@@ -67,17 +70,41 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 		}
 	}
 	if (startRow < 0) {
-		return { title: "", events: [], warnings: ["could not find header row"] };
+		return { title, date, events: [], warnings: ["could not find header row"] };
 	}
 
-	const events: IcsEvent[] = [];
+	const rows: ScheduleRow[] = [];
 	const warnings: string[] = [];
 	// startRow+1 to skip header row
 	for (let i = startRow + 1; i < data.length; i++) {
-		const parsed = parseRow(data[i]);
-		let { timeRange } = parsed;
-		const { person, notes } = parsed;
-		const location = parsed.room;
+		const row = parseRow(data[i]);
+		rows.push(row);
+	}
+	return { title, date, events: rows, warnings };
+}
+
+export type Calendar = {
+	title: string;
+	events: IcsEvent[];
+	warnings: string[];
+};
+
+export function sheetDataToCalendar(data: string[][]): Calendar {
+	const schedule = sheetDataToSchedule(data);
+	const sheetTitle = schedule.title;
+	const eventDate = schedule.date;
+
+	// event creation time stamp
+	const stamp = new Date();
+
+	// Find header row
+	const events: IcsEvent[] = [];
+	const warnings: string[] = [];
+	// startRow+1 to skip header row
+	for (const row of schedule.events) {
+		let { timeRange } = row;
+		const { person, notes } = row;
+		const location = row.room;
 
 		let title = person;
 		if (title == "" || title == "BREAK") {
