@@ -148,20 +148,22 @@ export type ParticipationCount = {
 function aggregateParticipation(events: ParticipationEvent[]): ParticipationCount[] {
 	const counts: Map<string, { types: Map<PartType, number>; candidates: string[] }> = new Map();
 	for (const event of events) {
-		if (!counts.has(event.name)) {
+		const { name, type, candidate } = event;
+		if (!counts.has(name)) {
 			const m = new Map();
 			for (const type of ["breakfast", "lunch", "1:1", "dinner"]) {
 				m.set(type, 0);
 			}
-			counts.set(event.name, { types: new Map(), candidates: [] });
+			counts.set(name, { types: new Map(), candidates: [] });
 		}
-		const thisCount = counts.get(event.name);
+		const thisCount = counts.get(name);
 		if (!thisCount) {
 			throw new Error("assertion failed: did not initialize counts");
 		}
-		thisCount.types.set(event.type, (thisCount.types.get(event.type) || 0) + 1);
-		if (!thisCount.candidates.includes(event.candidate)) {
-			thisCount.candidates.push(event.candidate);
+		const thisTypes = thisCount.types;
+		thisTypes.set(type, (thisTypes.get(type) || 0) + 1);
+		if (!thisCount.candidates.includes(candidate)) {
+			thisCount.candidates.push(candidate);
 		}
 	}
 	const countList: ParticipationCount[] = [];
