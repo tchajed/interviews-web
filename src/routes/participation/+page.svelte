@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fetchSheetHtml } from "$lib/fetch_sheet";
-	import { getParticipationEvents } from "$lib/participation";
+	import { getParticipation, totalCount, type ParticipationCount } from "$lib/participation";
 	import { Heading, Helper, Input, Label, Li, List, Spinner } from "flowbite-svelte";
 	let url: string = "";
 	let sheetHtml: string | null = null;
@@ -54,12 +54,20 @@
 		<Helper color="red"><span class="font-medium">Error:</span> {fetchError}</Helper>
 	{/if}
 	{#if sheetHtml}
-		{#await getParticipationEvents(sheetHtml)}
+		{#await getParticipation(sheetHtml)}
 			<Spinner />
-		{:then evs}
+		{:then counts}
 			<List tag="ul">
-				{#each evs as ev}
-					<Li>{ev.name} &mdash; {ev.type}</Li>
+				{#each counts as count}
+					<Li
+						>{count.name} &mdash; {totalCount(count)}
+						<span class="text-gray-500">
+							[{#each count.candidates as c, idx}
+								{c}{#if idx < count.candidates.length - 1},
+								{/if}
+							{/each}]
+						</span>
+					</Li>
 				{/each}
 			</List>
 		{/await}
