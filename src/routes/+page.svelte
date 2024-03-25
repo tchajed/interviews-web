@@ -127,11 +127,3 @@
 		{/each}
 	</List>
 {/if}
-
-<style>
-	:global(body) {
-		max-width: 800px;
-		padding: 5px;
-		margin: 1em auto;
-	}
-</style>
