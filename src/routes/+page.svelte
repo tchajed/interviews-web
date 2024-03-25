@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { fetchSheetTsv } from '$lib/fetch_sheet';
-	import { type Calendar, eventsToIcs, sheetDataToCalendar } from '$lib/schedule';
-	import { Heading, Input, Label, Button, Helper, Li, List } from 'flowbite-svelte';
-	import { CalendarMonthSolid } from 'flowbite-svelte-icons';
-	let url: string = '';
+	import { fetchSheetTsv } from "$lib/fetch_sheet";
+	import { type Calendar, eventsToIcs, sheetDataToCalendar } from "$lib/schedule";
+	import { Heading, Input, Label, Button, Helper, Li, List } from "flowbite-svelte";
+	import { CalendarMonthSolid } from "flowbite-svelte-icons";
+	let url: string = "";
 	let cal: Calendar | null = null;
 	let fetchError: string | null = null;
-	let validColor: 'green' | 'red' | undefined = undefined;
+	let validColor: "green" | "red" | undefined = undefined;
 	$: {
 		if (cal != null) {
-			validColor = 'green';
+			validColor = "green";
 		} else {
 			if (fetchError != null) {
-				validColor = 'red';
+				validColor = "red";
 			} else {
 				validColor = undefined;
 			}
@@ -24,20 +24,20 @@
 		if (h > 12) {
 			h -= 12;
 		}
-		return `${h}:${d.getMinutes().toString().padStart(2, '0')}`;
+		return `${h}:${d.getMinutes().toString().padStart(2, "0")}`;
 	}
 
 	function formatDate(d: Date): string {
 		// TODO: want nicer format (day of week, short month)
 		const y = d.getFullYear();
-		const m = (d.getMonth() + 1).toString().padStart(2, '0');
-		const day = d.getDate().toString().padStart(2, '0');
+		const m = (d.getMonth() + 1).toString().padStart(2, "0");
+		const day = d.getDate().toString().padStart(2, "0");
 		return `${y}-${m}-${day}`;
 	}
 
 	function downloadBlob(blob: Blob, filename: string) {
 		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
+		const a = document.createElement("a");
 		a.href = url;
 		a.download = filename;
 
@@ -45,22 +45,22 @@
 		const clickHandler = () => {
 			setTimeout(() => {
 				URL.revokeObjectURL(url);
-				removeEventListener('click', clickHandler);
+				removeEventListener("click", clickHandler);
 			}, 150);
 		};
-		a.addEventListener('click', clickHandler, false);
+		a.addEventListener("click", clickHandler, false);
 		a.click();
 		// note that a is never added to the DOM
 	}
 
 	function handleDownload() {
 		if (!cal) return;
-		const blob = new Blob([eventsToIcs(cal.events)], { type: 'text/calendar' });
+		const blob = new Blob([eventsToIcs(cal.events)], { type: "text/calendar" });
 		downloadBlob(blob, `${cal.title} - UW-Madison.ics`);
 	}
 
 	// TODO: doesn't handle debouncing
-	$: if (url != '') {
+	$: if (url != "") {
 		fetchError = null;
 		// TODO: handle and report errors
 		fetchSheetTsv(url)
@@ -72,7 +72,7 @@
 				if (err instanceof Error) {
 					fetchError = err.message;
 				} else {
-					fetchError = 'Unknown error';
+					fetchError = "Unknown error";
 				}
 			});
 	}
@@ -120,7 +120,7 @@
 			<Li>
 				{formatTime(event.startTime)}-{formatTime(event.endTime)} &mdash;
 				<span class="font-medium">{event.title}</span>
-				{#if event.location != ''}
+				{#if event.location != ""}
 					&mdash; {event.location}
 				{/if}
 			</Li>

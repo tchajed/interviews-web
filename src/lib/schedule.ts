@@ -1,4 +1,4 @@
-import { eventToIcal, type IcsEvent } from './ical';
+import { eventToIcal, type IcsEvent } from "./ical";
 
 function parseRow(data: string[]): {
 	timeRange: string;
@@ -10,13 +10,13 @@ function parseRow(data: string[]): {
 		timeRange: data[0],
 		person: data[1],
 		room: data[2],
-		notes: data[3]
+		notes: data[3],
 	};
 }
 
 function parseTime(time: string): { h: number; m: number } {
-	let h = parseInt(time.split(':')[0]);
-	const m = parseInt(time.split(':')[1]);
+	let h = parseInt(time.split(":")[0]);
+	const m = parseInt(time.split(":")[1]);
 	// heuristic for am/pm
 	if (h <= 7) {
 		h = h + 12;
@@ -32,10 +32,10 @@ function dateWithTime(date: Date, time: { h: number; m: number }): Date {
 }
 
 export function timeRangeToIcal(eventDate: Date, timeRange: string): { start: Date; end: Date } {
-	const startTime = parseTime(timeRange.split('-')[0]);
+	const startTime = parseTime(timeRange.split("-")[0]);
 	const start = dateWithTime(eventDate, startTime);
 
-	const endTime = parseTime(timeRange.split('-')[1]);
+	const endTime = parseTime(timeRange.split("-")[1]);
 	const end = dateWithTime(eventDate, endTime);
 
 	return { start, end };
@@ -61,13 +61,13 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 	// Find header row
 	let startRow = -1;
 	for (let i = 1; i < data.length; i++) {
-		if (data[i][0] == 'Time') {
+		if (data[i][0] == "Time") {
 			startRow = i;
 			break;
 		}
 	}
 	if (startRow < 0) {
-		return { title: '', events: [], warnings: ['could not find header row'] };
+		return { title: "", events: [], warnings: ["could not find header row"] };
 	}
 
 	const events: IcsEvent[] = [];
@@ -80,28 +80,28 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 		const location = parsed.room;
 
 		let title = person;
-		if (title == '' || title == 'BREAK') {
+		if (title == "" || title == "BREAK") {
 			continue;
 		}
-		if (timeRange.includes('LUNCH')) {
+		if (timeRange.includes("LUNCH")) {
 			title = `Lunch: ${title}`;
 		}
-		if (timeRange.includes('DINNER')) {
+		if (timeRange.includes("DINNER")) {
 			title = `Dinner: ${title}`;
 		}
 
-		if (timeRange == 'Pickup/Breakfast') {
-			timeRange = '8:00-9:00';
+		if (timeRange == "Pickup/Breakfast") {
+			timeRange = "8:00-9:00";
 		}
 		let startEnd: { start: Date; end: Date };
-		if (timeRange == 'DINNER') {
+		if (timeRange == "DINNER") {
 			// try to get a time from the notes
 			let m = /[0-9]+:[0-9]+/.exec(notes);
 			if (m) {
 				const time = parseTime(m[0]);
 				startEnd = {
 					start: dateWithTime(eventDate, time),
-					end: dateWithTime(eventDate, { h: time.h + 2, m: time.m })
+					end: dateWithTime(eventDate, { h: time.h + 2, m: time.m }),
 				};
 			} else {
 				m = /[0-9]+(pm|PM)/.exec(notes);
@@ -109,15 +109,15 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 					const time = { h: parseInt(m[0]) + 12, m: 0 };
 					startEnd = {
 						start: dateWithTime(eventDate, time),
-						end: dateWithTime(eventDate, { h: time.h + 2, m: time.m })
+						end: dateWithTime(eventDate, { h: time.h + 2, m: time.m }),
 					};
 				} else {
-					warnings.push('could not find time for dinner');
+					warnings.push("could not find time for dinner");
 					continue;
 				}
 			}
 		} else {
-			if (!timeRange.includes('-')) {
+			if (!timeRange.includes("-")) {
 				continue;
 			}
 			startEnd = timeRangeToIcal(eventDate, timeRange);
@@ -129,17 +129,17 @@ export function sheetDataToCalendar(data: string[][]): Calendar {
 			startTime: startEnd.start,
 			endTime: startEnd.end,
 			location,
-			description: notes
+			description: notes,
 		});
 	}
 	return { title: sheetTitle, events, warnings };
 }
 
 export function eventsToIcs(events: IcsEvent[]): string {
-	let icsContent = 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//UW-Madison//EN\n';
+	let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//UW-Madison//EN\n";
 	for (const event of events) {
 		icsContent += eventToIcal(event);
 	}
-	icsContent += 'END:VCALENDAR';
+	icsContent += "END:VCALENDAR";
 	return icsContent;
 }

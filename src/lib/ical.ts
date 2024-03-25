@@ -1,5 +1,5 @@
 export function pad(n: number, width: number) {
-	return String(n).padStart(width, '0');
+	return String(n).padStart(width, "0");
 }
 
 export function dateToIcal(date: string | Date) {
@@ -13,7 +13,7 @@ export function timeToIcal(time: { h: number; m: number }): string {
 }
 
 function datetimeToIcal(date: Date): string {
-	return dateToIcal(date) + 'T' + timeToIcal({ h: date.getHours(), m: date.getMinutes() });
+	return dateToIcal(date) + "T" + timeToIcal({ h: date.getHours(), m: date.getMinutes() });
 }
 
 export type IcsEvent = {
@@ -26,7 +26,7 @@ export type IcsEvent = {
 };
 
 export function eventToIcal(event: IcsEvent): string {
-	let icsContent = 'BEGIN:VEVENT\n';
+	let icsContent = "BEGIN:VEVENT\n";
 	icsContent += `SUMMARY:${event.title}\n`;
 	icsContent += `DTSTART;TZID=America/Chicago:${datetimeToIcal(event.startTime)}\n`;
 	icsContent += `DTEND;TZID=America/Chicago:${datetimeToIcal(event.endTime)}\n`;
@@ -36,6 +36,6 @@ export function eventToIcal(event: IcsEvent): string {
 		icsContent += `DESCRIPTION:${event.description}\n`;
 	}
 	icsContent += `UID:${crypto.randomUUID()}\n`;
-	icsContent += 'END:VEVENT\n';
+	icsContent += "END:VEVENT\n";
 	return icsContent;
 }
