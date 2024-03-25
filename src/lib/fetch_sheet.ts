@@ -1,8 +1,14 @@
-function parseSheetUrl(url: string): { id: string; gid: string } | null {
+import JSZip from "jszip";
+
+function parseSheetUrl(url: string): { id: string; gid: string } | { error: string } {
 	const re = new RegExp("^https://docs.google.com/spreadsheets/d/([^/]+)/edit#gid=([0-9]+)");
 	const m = re.exec(url);
 	if (!m) {
-		return null;
+		const looserRe = new RegExp("^https://docs.google.com/spreadsheets/d/([^/]+)/?.*");
+		if (!looserRe.exec(url)) {
+			return { error: "could not parse URL" };
+		}
+		return { error: "could not parse sheet URL (missing #gid=)" };
 	}
 	return {
 		id: m[1],
@@ -34,14 +40,48 @@ function fetchRawTsv(id: string, gid: string): Promise<string> {
 
 export async function fetchSheetTsv(url: string): Promise<string[][]> {
 	const parsed = parseSheetUrl(url);
-	if (!parsed) {
-		const looserRe = new RegExp("^https://docs.google.com/spreadsheets/d/([^/]+)/?.*");
-		if (!looserRe.exec(url)) {
-			throw new Error(`could not parse URL`);
-		}
-		throw new Error(`could not parse sheet URL (missing #gid=)`);
+	if ("error" in parsed) {
+		throw new Error(parsed.error);
 	}
 	const { id, gid } = parsed;
 	const tsv = await fetchRawTsv(id, gid);
 	return parseTsvString(tsv);
+}
+
+function parseSheetId(url: string): { id: string } | { error: string } {
+	const re = new RegExp("^https://docs.google.com/spreadsheets/d/([^/]+)/.*");
+	const m = re.exec(url);
+	if (!m) {
+		return { error: "could not parse URL" };
+	}
+	return { id: m[1] };
+}
+
+export async function fetchSheetHtml(url: string, sheetName: string): Promise<string> {
+	const parsed = parseSheetId(url);
+	if ("error" in parsed) {
+		throw new Error(parsed.error);
+	}
+	const { id } = parsed;
+	const zip = await fetch(`https://docs.google.com/spreadsheets/d/${id}/export?format=zip`)
+		.then((resp) => {
+			if (!resp.ok) {
+				throw new Error(`could not fetch URL: ${resp.status}`);
+			}
+			return resp.arrayBuffer();
+		})
+		.then((buf) => {
+			return JSZip.loadAsync(buf);
+		});
+	const entry = zip.file(`${sheetName}.html`);
+	if (!entry) {
+		const files = [];
+		for (const file in Object.keys(zip.files)) {
+			files.push(zip.files[file].name);
+		}
+		files.sort();
+		console.log("files:", files);
+		throw new Error(`could not find sheet ${sheetName}`);
+	}
+	return entry.async("text");
 }
