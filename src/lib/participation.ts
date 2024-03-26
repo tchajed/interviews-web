@@ -69,7 +69,8 @@ function getParticipationEvents(schedules: Schedule[]): ParticipationEvent[] {
 		for (const event of sched.events) {
 			const type = classifyEvent(event);
 			event.person.split(re).forEach((name) => {
-				if (IgnoredNames.test(name.trim())) {
+				name = name.trim();
+				if (IgnoredNames.test(name)) {
 					return;
 				}
 				events.push({ name, type, candidate: sched.title.trim() });
