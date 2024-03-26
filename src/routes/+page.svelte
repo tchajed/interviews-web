@@ -8,10 +8,10 @@
 	let fetchError: string | null = null;
 	let validColor: "green" | "red" | undefined = undefined;
 	$: {
-		if (cal != null) {
+		if (cal) {
 			validColor = "green";
 		} else {
-			if (fetchError != null) {
+			if (fetchError) {
 				validColor = "red";
 			} else {
 				validColor = undefined;
@@ -92,7 +92,7 @@
 		placeholder="https://docs.google.com/..."
 		required
 	/>
-	{#if cal != null}
+	{#if cal}
 		{#each cal.warnings as warning}
 			<Helper class="mt-2" color="red">
 				<span class="font-medium">Warning:</span>
@@ -100,7 +100,7 @@
 			</Helper>
 		{/each}
 	{/if}
-	{#if fetchError != null}
+	{#if fetchError}
 		<Helper class="mt-2" color="red">
 			<span class="font-medium">Error:</span>
 			{fetchError}
@@ -113,7 +113,7 @@
 		Download ICS
 	</Button>
 </div>
-{#if cal != null}
+{#if cal}
 	<Heading tag="h4" class="mb-4">{cal.title} &mdash; {formatDate(cal.events[0].startTime)}</Heading>
 	<List tag="ul" class="space-y-1 text-gray-500">
 		{#each cal.events as event}
