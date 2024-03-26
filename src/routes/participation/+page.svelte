@@ -41,12 +41,8 @@
 		}
 	}
 
-	async function fetchParticipation(): Promise<ParticipationCount[]> {
-		if (!sheetHtml) {
-			console.warn("fetchParticipation called with no sheetHtml");
-			return [];
-		}
-		const urls = getScheduleSheets(sheetHtml);
+	async function fetchParticipation(html: string): Promise<ParticipationCount[]> {
+		const urls = getScheduleSheets(html);
 		if (urls.length == 0) {
 			fetchError = "no schedule sheets found in master schedule";
 			return [];
@@ -81,7 +77,7 @@
 		<Helper color="red"><span class="font-medium">Error:</span> {fetchError}</Helper>
 	{/if}
 	{#if sheetHtml}
-		{#await fetchParticipation()}
+		{#await fetchParticipation(sheetHtml)}
 			{#if fetched}
 				<span class="text-gray-500">Fetching {fetched.total - fetched.sheets} sheets...</span>
 				<Progressbar progress={Math.round((fetched.sheets / fetched.total) * 100)} />
