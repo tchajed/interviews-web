@@ -45,13 +45,13 @@ export type ParticipationEvent = {
 };
 
 function classifyEvent(row: ScheduleRow): PartType {
-	if (row.timeRange.includes("LUNCH")) {
+	if (/LUNCH/i.test(row.timeRange)) {
 		return "lunch";
 	}
-	if (row.timeRange.includes("Breakfast")) {
+	if (/(?:Pickup|Breakfast)/i.test(row.timeRange)) {
 		return "breakfast";
 	}
-	if (row.timeRange.includes("DINNER")) {
+	if (/DINNER/i.test(row.timeRange)) {
 		return "dinner";
 	}
 	return "1:1";
@@ -160,10 +160,6 @@ function aggregateParticipation(events: ParticipationEvent[]): ParticipationCoun
 	for (const event of events) {
 		const { name, type, candidate } = event;
 		if (!counts.has(name)) {
-			const m = new Map();
-			for (const type of ["breakfast", "lunch", "1:1", "dinner"]) {
-				m.set(type, 0);
-			}
 			counts.set(name, { types: new Map(), candidates: [] });
 		}
 		const thisCount = counts.get(name);

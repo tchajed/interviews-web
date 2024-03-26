@@ -16,8 +16,6 @@
 		Helper,
 		Input,
 		Label,
-		Li,
-		List,
 		Progressbar,
 		Table,
 		TableBody,
