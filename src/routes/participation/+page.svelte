@@ -8,6 +8,7 @@
 		type ParticipationCount,
 		getScheduleSheets,
 		countsToTsv,
+		type PartType,
 	} from "$lib/participation";
 	import {
 		Button,
@@ -23,13 +24,43 @@
 		TableHead,
 		TableHeadCell,
 	} from "flowbite-svelte";
+	import { writable, type Writable } from "svelte/store";
 	let url: string = "";
 	let fetchError: string | null = null;
 	let fetchProgress: { sheets: number; total: number } | null = null;
 	let counts: ParticipationCount[] | null = null;
 
-	let validColor: "green" | "red" | undefined = undefined;
+	const sortKey: Writable<string> = writable("total");
+	const sortItems: Writable<ParticipationCount[]> = writable((counts || []).slice());
 
+	// Define a function to sort the items
+	const sortTable = (key: string) => {
+		sortKey.set(key);
+	};
+
+	function getSortedTable(counts: ParticipationCount[], key: string): ParticipationCount[] {
+		if (key == "name") {
+			return [...counts].sort((a: ParticipationCount, b: ParticipationCount) =>
+				a.name.localeCompare(b.name),
+			);
+		}
+		const getKey = (count: ParticipationCount): number => {
+			if (key == "total") {
+				return count.total;
+			} else {
+				return count.counts.get(key as PartType) || 0;
+			}
+		};
+		return [...counts].sort((a, b) => {
+			return getKey(b) - getKey(a);
+		});
+	}
+
+	$: {
+		sortItems.set(getSortedTable(counts || [], $sortKey));
+	}
+
+	let validColor: "green" | "red" | undefined = undefined;
 	$: {
 		if (fetchProgress || counts != null) {
 			validColor = "green";
@@ -117,17 +148,17 @@
 		<Progressbar progress={Math.round((fetchProgress.sheets / fetchProgress.total) * 100)} />
 	{:else if counts}
 		<Button size="sm" on:click={handleDownload} class="mb-4">Download TSV</Button>
-		<Table>
+		<Table hoverable={true}>
 			<TableHead>
-				<TableHeadCell>Name</TableHeadCell>
-				<TableHeadCell>Total</TableHeadCell>
-				<TableHeadCell>1:1</TableHeadCell>
-				<TableHeadCell>Breakfast</TableHeadCell>
-				<TableHeadCell>Lunch</TableHeadCell>
-				<TableHeadCell>Dinner</TableHeadCell>
+				<TableHeadCell on:click={() => sortTable("name")}>Name</TableHeadCell>
+				<TableHeadCell on:click={() => sortTable("total")}>Total</TableHeadCell>
+				<TableHeadCell on:click={() => sortTable("1:1")}>1:1</TableHeadCell>
+				<TableHeadCell on:click={() => sortTable("breakfast")}>Breakfast</TableHeadCell>
+				<TableHeadCell on:click={() => sortTable("lunch")}>Lunch</TableHeadCell>
+				<TableHeadCell on:click={() => sortTable("dinner")}>Dinner</TableHeadCell>
 			</TableHead>
 			<TableBody>
-				{#each counts as count}
+				{#each $sortItems as count}
 					<TableBodyRow>
 						<TableBodyCell>{count.name}</TableBodyCell>
 						<TableBodyCell>{count.total}</TableBodyCell>

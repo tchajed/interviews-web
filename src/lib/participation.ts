@@ -36,7 +36,7 @@ async function getSchedules(urls: string[], progressCb: () => void): Promise<Sch
 	return parScheds.flatMap((sched) => (sched ? [sched] : []));
 }
 
-type PartType = "breakfast" | "lunch" | "1:1" | "dinner";
+export type PartType = "breakfast" | "lunch" | "1:1" | "dinner";
 
 export type ParticipationEvent = {
 	name: string;
