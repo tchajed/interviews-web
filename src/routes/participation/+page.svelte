@@ -24,6 +24,7 @@
 		TableHead,
 		TableHeadCell,
 	} from "flowbite-svelte";
+	import { CaretUpSolid, CaretDownSolid } from "flowbite-svelte-icons";
 	import { writable, type Writable } from "svelte/store";
 	let url: string = "";
 	let fetchError: string | null = null;
@@ -149,13 +150,18 @@
 	{:else if counts}
 		<Button size="sm" on:click={handleDownload} class="mb-4">Download TSV</Button>
 		<Table hoverable={true}>
-			<TableHead>
-				<TableHeadCell on:click={() => sortTable("name")}>Name</TableHeadCell>
-				<TableHeadCell on:click={() => sortTable("total")}>Total</TableHeadCell>
-				<TableHeadCell on:click={() => sortTable("1:1")}>1:1</TableHeadCell>
-				<TableHeadCell on:click={() => sortTable("breakfast")}>Breakfast</TableHeadCell>
-				<TableHeadCell on:click={() => sortTable("lunch")}>Lunch</TableHeadCell>
-				<TableHeadCell on:click={() => sortTable("dinner")}>Dinner</TableHeadCell>
+			<TableHead theadClass="divide-y">
+				{#each ["name", "total", "1:1", "breakfast", "lunch", "dinner"] as key}
+					<TableHeadCell class="cursor-pointer" on:click={() => sortTable(key)}>
+						<span class="inline-flex items-center">
+							{key.toUpperCase()}
+							{#if $sortKey == key}
+								{#if $sortKey == "name"}<CaretUpSolid />
+								{:else}<CaretDownSolid />{/if}
+							{/if}
+						</span>
+					</TableHeadCell>
+				{/each}
 			</TableHead>
 			<TableBody>
 				{#each $sortItems as count}
