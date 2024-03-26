@@ -81,10 +81,9 @@ function getParticipationEvents(schedules: Schedule[]): ParticipationEvent[] {
 	return events;
 }
 
-export function totalCount(counts: ParticipationCount): number {
+function totalCount(counts: Map<string, number>): number {
 	let total = 0;
-	for (const kv of counts.counts) {
-		const count = kv[1];
+	for (const count of counts.values()) {
 		total += count;
 	}
 	return total;
@@ -98,7 +97,7 @@ export async function getParticipation(
 	const events = getParticipationEvents(schedules);
 	normalizeNames(events);
 	const aggregate = aggregateParticipation(events);
-	aggregate.sort((a, b) => totalCount(b) - totalCount(a));
+	aggregate.sort((a, b) => b.total - a.total);
 	return aggregate;
 }
 
@@ -151,6 +150,7 @@ function normalizeNames(events: ParticipationEvent[]) {
 
 export type ParticipationCount = {
 	name: string;
+	total: number;
 	counts: Map<PartType, number>;
 	candidates: string[];
 };
@@ -174,19 +174,25 @@ function aggregateParticipation(events: ParticipationEvent[]): ParticipationCoun
 	}
 	const countList: ParticipationCount[] = [];
 	for (const [name, count] of counts) {
-		countList.push({ name, counts: count.types, candidates: count.candidates });
+		countList.push({
+			name,
+			total: totalCount(count.types),
+			counts: count.types,
+			candidates: count.candidates,
+		});
 	}
 	return countList;
 }
 
 export function countsToTsv(counts: ParticipationCount[]): string {
 	const lines: string[] = [];
-	lines.push("Name\tBreakfast\tLunch\t1:1\tDinner\tCandidates");
+	lines.push("Name\tTotal\tBreakfast\tLunch\t1:1\tDinner\tCandidates");
 	for (const count of counts) {
 		const parts: string[] = [];
 		parts.push(count.name.trim());
+		parts.push(count.total.toString());
 		for (const type of ["breakfast", "lunch", "1:1", "dinner"]) {
-			parts.push(String(count.counts.get(type as PartType) || 0));
+			parts.push((count.counts.get(type as PartType) || 0).toString());
 		}
 		parts.push(count.candidates.map((c) => c.trim()).join(", "));
 		lines.push(parts.join("\t"));

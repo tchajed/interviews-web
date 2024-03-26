@@ -5,7 +5,6 @@
 	import { fetchSheetHtml } from "$lib/fetch_sheet";
 	import {
 		getParticipation,
-		totalCount,
 		type ParticipationCount,
 		getScheduleSheets,
 		countsToTsv,
@@ -131,7 +130,7 @@
 				{#each counts as count}
 					<TableBodyRow>
 						<TableBodyCell>{count.name}</TableBodyCell>
-						<TableBodyCell>{totalCount(count)}</TableBodyCell>
+						<TableBodyCell>{count.total}</TableBodyCell>
 						<TableBodyCell>{count.counts.get("1:1") || 0}</TableBodyCell>
 						<TableBodyCell>{count.counts.get("breakfast") || 0}</TableBodyCell>
 						<TableBodyCell>{count.counts.get("lunch") || 0}</TableBodyCell>
