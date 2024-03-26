@@ -1,10 +1,17 @@
 <script lang="ts">
+	// @hmr:keep-all
 	import { fetchSheetHtml } from "$lib/fetch_sheet";
-	import { getParticipation, totalCount, type ParticipationCount } from "$lib/participation";
-	import { Heading, Helper, Input, Label, Li, List, Spinner } from "flowbite-svelte";
+	import {
+		getParticipation,
+		totalCount,
+		type ParticipationCount,
+		getScheduleSheets,
+	} from "$lib/participation";
+	import { Heading, Helper, Input, Label, Li, List, Progressbar, Spinner } from "flowbite-svelte";
 	let url: string = "";
 	let sheetHtml: string | null = null;
 	let fetchError: string | null = null;
+	let fetched: { sheets: number; total: number } | null = null;
 
 	let validColor: "green" | "red" | undefined = undefined;
 
@@ -33,6 +40,26 @@
 				});
 		}
 	}
+
+	async function fetchParticipation(): Promise<ParticipationCount[]> {
+		if (!sheetHtml) {
+			console.warn("fetchParticipation called with no sheetHtml");
+			return [];
+		}
+		const urls = getScheduleSheets(sheetHtml);
+		if (urls.length == 0) {
+			fetchError = "no schedule sheets found in master schedule";
+			return [];
+		}
+		fetched = { sheets: 0, total: urls.length };
+		const counts = await getParticipation(urls, () => {
+			if (fetched) {
+				fetched.sheets++;
+			}
+		});
+		fetched = null;
+		return counts;
+	}
 </script>
 
 <Heading tag="h2" class="mb-12">Interview participation</Heading>
@@ -54,8 +81,13 @@
 		<Helper color="red"><span class="font-medium">Error:</span> {fetchError}</Helper>
 	{/if}
 	{#if sheetHtml}
-		{#await getParticipation(sheetHtml)}
-			<Spinner />
+		{#await fetchParticipation()}
+			{#if fetched}
+				<span class="text-gray-500">Fetching {fetched.total - fetched.sheets} sheets...</span>
+				<Progressbar progress={Math.round((fetched.sheets / fetched.total) * 100)} />
+			{:else}
+				<Spinner />
+			{/if}
 		{:then counts}
 			<List tag="ul">
 				{#each counts as count}
@@ -64,8 +96,7 @@
 						<span class="text-gray-500">
 							[{#each count.candidates as c, idx}
 								{c}{#if idx < count.candidates.length - 1},
-								{/if}
-							{/each}]
+								{/if}{/each}]
 						</span>
 					</Li>
 				{/each}

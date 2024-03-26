@@ -3,7 +3,7 @@
 	import { type Calendar, eventsToIcs, sheetDataToCalendar } from "$lib/schedule";
 	import { Heading, Input, Label, Button, Helper, Li, List } from "flowbite-svelte";
 	import { CalendarMonthSolid } from "flowbite-svelte-icons";
-	let url: string = "";
+	let url: string = ""; // @hmr:keep
 	let cal: Calendar | null = null;
 	let fetchError: string | null = null;
 	let validColor: "green" | "red" | undefined = undefined;

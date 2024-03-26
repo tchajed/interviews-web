@@ -1,7 +1,8 @@
 import { fetchSheetTsv } from "./fetch_sheet";
 import { sheetDataToSchedule, type Schedule, type ScheduleRow } from "./schedule";
+import pLimit from "p-limit";
 
-function getScheduleSheets(masterHtml: string): string[] {
+export function getScheduleSheets(masterHtml: string): string[] {
 	const parser = new DOMParser();
 	const doc = parser.parseFromString(masterHtml, "text/html");
 	const urls: string[] = [];
@@ -18,16 +19,21 @@ function getScheduleSheets(masterHtml: string): string[] {
 	return urls;
 }
 
-async function getSchedules(urls: string[]): Promise<Schedule[]> {
-	const scheds = [];
-	for (const url of urls) {
-		const tsv = await fetchSheetTsv(url, "Schedule").catch(() => null);
-		if (!tsv) {
-			continue;
-		}
-		scheds.push(sheetDataToSchedule(tsv));
-	}
-	return scheds;
+async function getSchedules(urls: string[], progressCb: () => void): Promise<Schedule[]> {
+	const limit = pLimit(10);
+	const parScheds: (Schedule | null)[] = await Promise.all(
+		urls.map((url) =>
+			limit(async () => {
+				const tsv = await fetchSheetTsv(url, "Schedule").catch(() => null);
+				progressCb();
+				if (!tsv) {
+					return null;
+				}
+				return sheetDataToSchedule(tsv);
+			}),
+		),
+	);
+	return parScheds.flatMap((sched) => (sched ? [sched] : []));
 }
 
 type PartType = "breakfast" | "lunch" | "1:1" | "dinner";
@@ -51,24 +57,22 @@ function classifyEvent(row: ScheduleRow): PartType {
 	return "1:1";
 }
 
-const IgnoredNames = new RegExp(`(BREAK|TALK|TALK PREP|LUNCH|DINNER)|(^$)`, "i");
+const IgnoredNames = new RegExp(
+	`(?:BREAK|TALK|TALK PREP|LUNCH|DINNER)|(?:^$)|(grad(?:uate)? student.*)`,
+	"i",
+);
 
-async function getParticipationEvents(masterHtml: string): Promise<ParticipationEvent[]> {
-	const urls = getScheduleSheets(masterHtml);
-	const schedules = await getSchedules(urls);
+function getParticipationEvents(schedules: Schedule[]): ParticipationEvent[] {
 	const events: ParticipationEvent[] = [];
-	const re = new RegExp("\\s*[,+;&]\\s*");
+	const re = new RegExp("\\s*(?:[,+;&])|(?:\\band\\b)\\s*");
 	for (const sched of schedules) {
 		for (const event of sched.events) {
 			const type = classifyEvent(event);
-			if (IgnoredNames.test(event.person)) {
-				continue;
-			}
 			event.person.split(re).forEach((name) => {
-				if (name == "") {
+				if (IgnoredNames.test(name.trim())) {
 					return;
 				}
-				events.push({ name, type, candidate: sched.title });
+				events.push({ name, type, candidate: sched.title.trim() });
 			});
 		}
 	}
@@ -84,8 +88,12 @@ export function totalCount(counts: ParticipationCount): number {
 	return total;
 }
 
-export async function getParticipation(masterHtml: string): Promise<ParticipationCount[]> {
-	const events = await getParticipationEvents(masterHtml);
+export async function getParticipation(
+	urls: string[],
+	progressCb?: () => void,
+): Promise<ParticipationCount[]> {
+	const schedules = await getSchedules(urls, progressCb || (() => {}));
+	const events = getParticipationEvents(schedules);
 	normalizeNames(events);
 	const aggregate = aggregateParticipation(events);
 	aggregate.sort((a, b) => totalCount(b) - totalCount(a));
