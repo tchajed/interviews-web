@@ -9,14 +9,14 @@
 	} from "$lib/participation";
 	import { Heading, Helper, Input, Label, Li, List, Progressbar, Spinner } from "flowbite-svelte";
 	let url: string = "";
-	let sheetHtml: string | null = null;
 	let fetchError: string | null = null;
-	let fetched: { sheets: number; total: number } | null = null;
+	let fetchProgress: { sheets: number; total: number } | null = null;
+	let counts: ParticipationCount[] | null = null;
 
 	let validColor: "green" | "red" | undefined = undefined;
 
 	$: {
-		if (sheetHtml != null) {
+		if (fetchProgress || counts != null) {
 			validColor = "green";
 		} else {
 			if (fetchError != null) {
@@ -32,11 +32,13 @@
 			fetchError = null;
 			fetchSheetHtml(url, "Schedule")
 				.then((html) => {
-					sheetHtml = html;
+					fetchParticipation(html).then((c) => {
+						counts = c;
+					});
 				})
 				.catch((err) => {
 					fetchError = err.message;
-					sheetHtml = null;
+					counts = null;
 				});
 		}
 	}
@@ -47,13 +49,13 @@
 			fetchError = "no schedule sheets found in master schedule";
 			return [];
 		}
-		fetched = { sheets: 0, total: urls.length };
+		fetchProgress = { sheets: 0, total: urls.length };
 		const counts = await getParticipation(urls, () => {
-			if (fetched) {
-				fetched.sheets++;
+			if (fetchProgress) {
+				fetchProgress.sheets++;
 			}
 		});
-		fetched = null;
+		fetchProgress = null;
 		return counts;
 	}
 </script>
@@ -76,27 +78,22 @@
 	{#if fetchError}
 		<Helper color="red"><span class="font-medium">Error:</span> {fetchError}</Helper>
 	{/if}
-	{#if sheetHtml}
-		{#await fetchParticipation(sheetHtml)}
-			{#if fetched}
-				<span class="text-gray-500">Fetching {fetched.total - fetched.sheets} sheets...</span>
-				<Progressbar progress={Math.round((fetched.sheets / fetched.total) * 100)} />
-			{:else}
-				<Spinner />
-			{/if}
-		{:then counts}
-			<List tag="ul">
-				{#each counts as count}
-					<Li
-						>{count.name} &mdash; {totalCount(count)}
-						<span class="text-gray-500">
-							[{#each count.candidates as c, idx}
-								{c}{#if idx < count.candidates.length - 1},
-								{/if}{/each}]
-						</span>
-					</Li>
-				{/each}
-			</List>
-		{/await}
+	{#if fetchProgress}
+		{@const remaining = fetchProgress.total - fetchProgress.sheets}
+		<span class="text-gray-500">Fetching {remaining} sheets...</span>
+		<Progressbar progress={Math.round((fetchProgress.sheets / fetchProgress.total) * 100)} />
+	{:else if counts}
+		<List tag="ul">
+			{#each counts as count}
+				<Li
+					>{count.name} &mdash; {totalCount(count)}
+					<span class="text-gray-500">
+						[{#each count.candidates as c, idx}
+							{c}{#if idx < count.candidates.length - 1},
+							{/if}{/each}]
+					</span>
+				</Li>
+			{/each}
+		</List>
 	{/if}
 </div>
