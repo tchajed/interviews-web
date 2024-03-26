@@ -2,6 +2,23 @@ import { fetchSheetTsv } from "./fetch_sheet";
 import { sheetDataToSchedule, type Schedule, type ScheduleRow } from "./schedule";
 import pLimit from "p-limit";
 
+export type PartType = "breakfast" | "lunch" | "1:1" | "dinner";
+
+/** A single event worth of participation. */
+export type ParticipationEvent = {
+	name: string; // of the faculty
+	type: PartType;
+	candidate: string;
+};
+
+/** Aggregate participation for one faculty member. */
+export type ParticipationCount = {
+	name: string; // of the faculty
+	total: number;
+	counts: Map<PartType, number>;
+	candidates: string[];
+};
+
 export function getScheduleSheets(masterHtml: string): string[] {
 	const parser = new DOMParser();
 	const doc = parser.parseFromString(masterHtml, "text/html");
@@ -36,14 +53,6 @@ async function getSchedules(urls: string[], progressCb: () => void): Promise<Sch
 	return parScheds.flatMap((sched) => (sched ? [sched] : []));
 }
 
-export type PartType = "breakfast" | "lunch" | "1:1" | "dinner";
-
-export type ParticipationEvent = {
-	name: string;
-	type: PartType;
-	candidate: string;
-};
-
 function classifyEvent(row: ScheduleRow): PartType {
 	if (/LUNCH/i.test(row.timeRange)) {
 		return "lunch";
@@ -57,31 +66,34 @@ function classifyEvent(row: ScheduleRow): PartType {
 	return "1:1";
 }
 
-const IgnoredNames = new RegExp(
+const IgnoredNamesRe = new RegExp(
 	`(?:BREAK|TALK|TALK PREP|LUNCH|DINNER)|(?:^$)|(grad(?:uate)? student.*)`,
 	"i",
 );
 
-function getParticipationEvents(schedules: Schedule[]): ParticipationEvent[] {
+const NameSepRe = new RegExp("\\s*(?:[,+;&])|(?:\\band\\b)\\s*");
+
+function getParticipationForSchedule(sched: Schedule): ParticipationEvent[] {
 	const events: ParticipationEvent[] = [];
-	const re = new RegExp("\\s*(?:[,+;&])|(?:\\band\\b)\\s*");
-	for (const sched of schedules) {
-		const candidate = sched.title.replace(/^Schedule for /i, "").trim();
-		for (const event of sched.events) {
-			const type = classifyEvent(event);
-			event.person.split(re).forEach((name) => {
-				name = name.trim();
-				if (IgnoredNames.test(name)) {
-					return;
-				}
-				events.push({ name, type, candidate });
-			});
-		}
+	const candidate = sched.title.replace(/^Schedule for /i, "").trim();
+	for (const event of sched.events) {
+		const type = classifyEvent(event);
+		event.person.split(NameSepRe).forEach((name) => {
+			name = name.trim();
+			if (IgnoredNamesRe.test(name)) {
+				return;
+			}
+			events.push({ name, type, candidate });
+		});
 	}
 	return events;
 }
 
-function totalCount(counts: Map<string, number>): number {
+function getParticipationEvents(schedules: Schedule[]): ParticipationEvent[] {
+	return schedules.flatMap(getParticipationForSchedule);
+}
+
+function totalCount<T>(counts: Map<T, number>): number {
 	let total = 0;
 	for (const count of counts.values()) {
 		total += count;
@@ -89,6 +101,8 @@ function totalCount(counts: Map<string, number>): number {
 	return total;
 }
 
+/** Get aggregate participation for a set of URLs. Fetches the schedules and
+ * calls `progressCb` once per element of url. */
 export async function getParticipation(
 	urls: string[],
 	progressCb?: () => void,
@@ -106,29 +120,35 @@ type NameInfo = {
 	allNames: Set<string>;
 };
 
+/** Heuristic to normalize first or last name only to full name. Finds strings
+ * that look like full names (based on capitalization primarily), which will be
+ * used to map first and last individually to full name. Tries to also track
+ * when this is ambiguous, but that feature is poorly tested. */
 function inferNames(events: ParticipationEvent[]): NameInfo {
 	const remapNames: { [key: string]: string } = {};
-	const allNames = new Set<string>();
-	const firstLast = new RegExp(`^([A-Z][A-Za-z\\-]+) ([A-Z][a-z\\-]+)$`);
+	const allNames: Set<string> = new Set();
+	const firstLast = new RegExp(`^([A-Z][A-Za-z\\-]+) ([A-Z][A-Za-z\\-]+)( [A-Za-z\\-]+)?$`);
 	const seen: Set<string> = new Set();
 	for (const event of events) {
 		const m = firstLast.exec(event.name);
-		if (m) {
-			allNames.add(m[0]);
-			// map first name to full name
-			for (const namePart of [m[1], m[2]]) {
-				if (seen.has(namePart)) {
-					console.log(`${namePart} is ambiguous`);
-					delete remapNames[namePart];
-				} else {
-					remapNames[namePart] = event.name;
-				}
+		if (!m) {
+			continue;
+		}
+		allNames.add(m[0]);
+		// map first name to full name
+		for (const namePart of [m[1], m[2]]) {
+			if (seen.has(namePart)) {
+				console.log(`${namePart} is ambiguous`);
+				delete remapNames[namePart];
+			} else {
+				remapNames[namePart] = event.name;
 			}
 		}
 	}
 	return { remapNames, allNames };
 }
 
+/** Apply `nameInfo`'s normalization and remapping to `name`. */
 function normalizeName(nameInfo: NameInfo, name: string): string {
 	if (nameInfo.allNames.has(name)) {
 		return name;
@@ -141,19 +161,13 @@ function normalizeName(nameInfo: NameInfo, name: string): string {
 	return name;
 }
 
+/** Modify events in-place according to inferred names and normalization. */
 function normalizeNames(events: ParticipationEvent[]) {
 	const nameInfo = inferNames(events);
 	for (let i = 0; i < events.length; i++) {
 		events[i].name = normalizeName(nameInfo, events[i].name);
 	}
 }
-
-export type ParticipationCount = {
-	name: string;
-	total: number;
-	counts: Map<PartType, number>;
-	candidates: string[];
-};
 
 function aggregateParticipation(events: ParticipationEvent[]): ParticipationCount[] {
 	const counts: Map<string, { types: Map<PartType, number>; candidates: string[] }> = new Map();
@@ -166,10 +180,10 @@ function aggregateParticipation(events: ParticipationEvent[]): ParticipationCoun
 		if (!thisCount) {
 			throw new Error("assertion failed: did not initialize counts");
 		}
-		const thisTypes = thisCount.types;
-		thisTypes.set(type, (thisTypes.get(type) || 0) + 1);
-		if (!thisCount.candidates.includes(candidate)) {
-			thisCount.candidates.push(candidate);
+		const { types, candidates } = thisCount;
+		types.set(type, (types.get(type) || 0) + 1);
+		if (!candidates.includes(candidate)) {
+			candidates.push(candidate);
 		}
 	}
 	const countList: ParticipationCount[] = [];
@@ -186,10 +200,9 @@ function aggregateParticipation(events: ParticipationEvent[]): ParticipationCoun
 
 export function countsToTsv(counts: ParticipationCount[]): string {
 	const lines: string[] = [];
-	lines.push("Name\tTotal\tBreakfast\tLunch\t1:1\tDinner\tCandidates");
+	lines.push(["Name", "Total", "Breakfast", "Lunch", "1:1", "Dinner", "Candidates"].join("\t"));
 	for (const count of counts) {
-		const parts: string[] = [];
-		parts.push(count.name.trim());
+		const parts: string[] = [count.name.trim()];
 		parts.push(count.total.toString());
 		for (const type of ["breakfast", "lunch", "1:1", "dinner"]) {
 			parts.push((count.counts.get(type as PartType) || 0).toString());
