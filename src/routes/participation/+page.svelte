@@ -10,7 +10,22 @@
 		getScheduleSheets,
 		countsToTsv,
 	} from "$lib/participation";
-	import { Button, Heading, Helper, Input, Label, Li, List, Progressbar } from "flowbite-svelte";
+	import {
+		Button,
+		Heading,
+		Helper,
+		Input,
+		Label,
+		Li,
+		List,
+		Progressbar,
+		Table,
+		TableBody,
+		TableBodyCell,
+		TableBodyRow,
+		TableHead,
+		TableHeadCell,
+	} from "flowbite-svelte";
 	let url: string = "";
 	let fetchError: string | null = null;
 	let fetchProgress: { sheets: number; total: number } | null = null;
@@ -73,7 +88,11 @@
 		const m = (now.getMonth() + 1).toString().padStart(2, "0");
 		const d = now.getDate().toString().padStart(2, "0");
 		const date = `${now.getFullYear()}-${m}-${d}`;
-		downloadFile(countsToTsv(counts), "text/plain", `interview-participation-${date}.tsv`);
+		downloadFile(
+			countsToTsv(counts),
+			"text/tab-separated-values",
+			`interview-participation-${date}.tsv`,
+		);
 	}
 </script>
 
@@ -101,17 +120,27 @@
 		<Progressbar progress={Math.round((fetchProgress.sheets / fetchProgress.total) * 100)} />
 	{:else if counts}
 		<Button size="sm" on:click={handleDownload} class="mb-4">Download TSV</Button>
-		<List tag="ul">
-			{#each counts as count}
-				<Li
-					>{count.name} &mdash; {totalCount(count)}
-					<span class="text-gray-500">
-						[{#each count.candidates as c, idx}
-							{c}{#if idx < count.candidates.length - 1},
-							{/if}{/each}]
-					</span>
-				</Li>
-			{/each}
-		</List>
+		<Table>
+			<TableHead>
+				<TableHeadCell>Name</TableHeadCell>
+				<TableHeadCell>Total</TableHeadCell>
+				<TableHeadCell>1:1</TableHeadCell>
+				<TableHeadCell>Breakfast</TableHeadCell>
+				<TableHeadCell>Lunch</TableHeadCell>
+				<TableHeadCell>Dinner</TableHeadCell>
+			</TableHead>
+			<TableBody>
+				{#each counts as count}
+					<TableBodyRow>
+						<TableBodyCell>{count.name}</TableBodyCell>
+						<TableBodyCell>{totalCount(count)}</TableBodyCell>
+						<TableBodyCell>{count.counts.get("1:1") || 0}</TableBodyCell>
+						<TableBodyCell>{count.counts.get("breakfast") || 0}</TableBodyCell>
+						<TableBodyCell>{count.counts.get("lunch") || 0}</TableBodyCell>
+						<TableBodyCell>{count.counts.get("dinner") || 0}</TableBodyCell>
+					</TableBodyRow>
+				{/each}
+			</TableBody>
+		</Table>
 	{/if}
 </div>
