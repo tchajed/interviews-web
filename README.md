@@ -11,7 +11,7 @@
 
 ## Deploying
 
-```
+```sh
 pnpm run build
 rsync -a --delete build/ ~/code/personal-website/docs/interviews/
 ```
