@@ -1,10 +1,26 @@
 import { eventToIcal, type IcsEvent } from "./ical";
 
+/** One entry in a parsed schedule  */
 export type ScheduleRow = {
 	timeRange: string;
 	person: string;
 	room: string;
 	notes: string;
+};
+
+/** A parsed schedule sheet */
+export type Schedule = {
+	title: string;
+	date: Date;
+	events: ScheduleRow[];
+	warnings: string[];
+};
+
+/** A calendar ready for ICS export */
+export type Calendar = {
+	title: string;
+	events: IcsEvent[];
+	warnings: string[];
 };
 
 function parseRow(data: string[]): ScheduleRow {
@@ -43,13 +59,6 @@ function timeRangeToIcal(eventDate: Date, timeRange: string): { start: Date; end
 	return { start, end };
 }
 
-export type Schedule = {
-	title: string;
-	date: Date;
-	events: ScheduleRow[];
-	warnings: string[];
-};
-
 export function sheetDataToSchedule(data: string[][]): Schedule {
 	// cell A1
 	const title = data[0][0];
@@ -83,14 +92,7 @@ export function sheetDataToSchedule(data: string[][]): Schedule {
 	return { title, date, events: rows, warnings };
 }
 
-export type Calendar = {
-	title: string;
-	events: IcsEvent[];
-	warnings: string[];
-};
-
-export function sheetDataToCalendar(data: string[][]): Calendar {
-	const schedule = sheetDataToSchedule(data);
+export function scheduleToCalendar(schedule: Schedule): Calendar {
 	const sheetTitle = schedule.title;
 	const eventDate = schedule.date;
 

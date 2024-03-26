@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { downloadFile } from "$lib/download";
 	import { fetchSheetTsv } from "$lib/fetch_sheet";
-	import { type Calendar, eventsToIcs, sheetDataToCalendar } from "$lib/schedule";
+	import {
+		type Calendar,
+		eventsToIcs,
+		scheduleToCalendar,
+		sheetDataToSchedule,
+	} from "$lib/schedule";
 	import { Heading, Input, Label, Button, Helper, Li, List } from "flowbite-svelte";
 	import { CalendarMonthSolid } from "flowbite-svelte-icons";
 	let url: string = ""; // @hmr:keep
@@ -47,7 +52,7 @@
 		// TODO: handle and report errors
 		fetchSheetTsv(url)
 			.then((data) => {
-				cal = sheetDataToCalendar(data);
+				cal = scheduleToCalendar(sheetDataToSchedule(data));
 			})
 			.catch((err) => {
 				cal = null;

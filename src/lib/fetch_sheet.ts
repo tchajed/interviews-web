@@ -36,6 +36,9 @@ export function parseTsvString(tsv: string): string[][] {
 	return rows;
 }
 
+/** Fetch a Google Docs sheet in TSV format, as a string. The sheet can be
+ * specified by its gid (which appears in the #gid= part of the URL), or by
+ * specifying a sheet name. */
 function fetchRawTsv(
 	params: { id: string } & ({ gid: string } | { sheet: string }),
 ): Promise<string> {
@@ -56,8 +59,8 @@ function fetchRawTsv(
 	});
 }
 
-// Fetch a sheet from a URL. If sheet is provided, fetch that sheet by name
-// rather than using the #gid in the url.
+/** Fetch a sheet from a URL. If sheet is provided, fetch that sheet by name
+ * rather than using the #gid in the url. */
 export async function fetchSheetTsv(url: string, sheet?: string): Promise<string[][]> {
 	let tsv: string;
 	if (sheet) {
@@ -76,6 +79,9 @@ export async function fetchSheetTsv(url: string, sheet?: string): Promise<string
 	return parseTsvString(tsv);
 }
 
+/** Fetch a Google Docs spreadsheet sheet as an HTML string. This requires
+ * getting the entire spreadsheet as a zip file, then finding the individual
+ * sheet by name in the zip file. */
 export async function fetchSheetHtml(url: string, sheetName: string): Promise<string> {
 	const parsed = parseSheetId(url);
 	if ("error" in parsed) {
@@ -99,7 +105,7 @@ export async function fetchSheetHtml(url: string, sheetName: string): Promise<st
 			files.push(zip.files[file].name);
 		}
 		files.sort();
-		console.log("files:", files);
+		console.warn("files:", files);
 		throw new Error(`could not find sheet ${sheetName}`);
 	}
 	return entry.async("text");

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import fs from "fs";
 import { parseTsvString } from "$lib/fetch_sheet";
-import { sheetDataToCalendar, type Calendar } from "$lib/schedule";
+import { scheduleToCalendar, type Calendar, sheetDataToSchedule } from "$lib/schedule";
 
 describe("test schedule", () => {
 	it("parses as a TSV", () => {
@@ -17,8 +17,8 @@ describe("test schedule", () => {
 describe("schedule parsing", () => {
 	function getTestCalendar(): Calendar {
 		const scheduleContents = fs.readFileSync("src/test/example_schedule.tsv", "utf8");
-		const schedule = parseTsvString(scheduleContents);
-		return sheetDataToCalendar(schedule);
+		const data = parseTsvString(scheduleContents);
+		return scheduleToCalendar(sheetDataToSchedule(data));
 	}
 
 	it("parses the test schedule", () => {
