@@ -66,6 +66,7 @@ function getParticipationEvents(schedules: Schedule[]): ParticipationEvent[] {
 	const events: ParticipationEvent[] = [];
 	const re = new RegExp("\\s*(?:[,+;&])|(?:\\band\\b)\\s*");
 	for (const sched of schedules) {
+		const candidate = sched.title.replace(/^Schedule for /i, "").trim();
 		for (const event of sched.events) {
 			const type = classifyEvent(event);
 			event.person.split(re).forEach((name) => {
@@ -73,7 +74,7 @@ function getParticipationEvents(schedules: Schedule[]): ParticipationEvent[] {
 				if (IgnoredNames.test(name)) {
 					return;
 				}
-				events.push({ name, type, candidate: sched.title.trim() });
+				events.push({ name, type, candidate });
 			});
 		}
 	}
