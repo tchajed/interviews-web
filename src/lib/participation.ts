@@ -182,3 +182,18 @@ function aggregateParticipation(events: ParticipationEvent[]): ParticipationCoun
 	}
 	return countList;
 }
+
+export function countsToTsv(counts: ParticipationCount[]): string {
+	const lines: string[] = [];
+	lines.push("Name\tBreakfast\tLunch\t1:1\tDinner\tCandidates");
+	for (const count of counts) {
+		const parts: string[] = [];
+		parts.push(count.name.trim());
+		for (const type of ["breakfast", "lunch", "1:1", "dinner"]) {
+			parts.push(String(count.counts.get(type as PartType) || 0));
+		}
+		parts.push(count.candidates.map((c) => c.trim()).join(", "));
+		lines.push(parts.join("\t"));
+	}
+	return lines.join("\n") + "\n";
+}

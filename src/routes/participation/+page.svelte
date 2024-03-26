@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { downloadFile } from "$lib/download";
+
 	// @hmr:keep-all
 	import { fetchSheetHtml } from "$lib/fetch_sheet";
 	import {
@@ -6,8 +8,9 @@
 		totalCount,
 		type ParticipationCount,
 		getScheduleSheets,
+		countsToTsv,
 	} from "$lib/participation";
-	import { Heading, Helper, Input, Label, Li, List, Progressbar, Spinner } from "flowbite-svelte";
+	import { Button, Heading, Helper, Input, Label, Li, List, Progressbar } from "flowbite-svelte";
 	let url: string = "";
 	let fetchError: string | null = null;
 	let fetchProgress: { sheets: number; total: number } | null = null;
@@ -28,7 +31,10 @@
 	}
 
 	$: {
-		if (url != "") {
+		if (url == "") {
+			fetchError = null;
+			counts = null;
+		} else {
 			fetchError = null;
 			fetchSheetHtml(url, "Schedule")
 				.then((html) => {
@@ -58,6 +64,17 @@
 		fetchProgress = null;
 		return counts;
 	}
+
+	function handleDownload() {
+		if (!counts) {
+			return;
+		}
+		const now = new Date();
+		const m = (now.getMonth() + 1).toString().padStart(2, "0");
+		const d = now.getDate().toString().padStart(2, "0");
+		const date = `${now.getFullYear()}-${m}-${d}`;
+		downloadFile(countsToTsv(counts), "text/plain", `interview-participation-${date}.tsv`);
+	}
 </script>
 
 <Heading tag="h2" class="mb-12">Interview participation</Heading>
@@ -83,6 +100,7 @@
 		<span class="text-gray-500">Fetching {remaining} sheets...</span>
 		<Progressbar progress={Math.round((fetchProgress.sheets / fetchProgress.total) * 100)} />
 	{:else if counts}
+		<Button size="sm" on:click={handleDownload} class="mb-4">Download TSV</Button>
 		<List tag="ul">
 			{#each counts as count}
 				<Li

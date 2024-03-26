@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { downloadFile } from "$lib/download";
 	import { fetchSheetTsv } from "$lib/fetch_sheet";
 	import { type Calendar, eventsToIcs, sheetDataToCalendar } from "$lib/schedule";
 	import { Heading, Input, Label, Button, Helper, Li, List } from "flowbite-svelte";
@@ -35,28 +36,9 @@
 		return `${y}-${m}-${day}`;
 	}
 
-	function downloadBlob(blob: Blob, filename: string) {
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = filename;
-
-		// Click handler that releases the object URL after the element has been clicked
-		const clickHandler = () => {
-			setTimeout(() => {
-				URL.revokeObjectURL(url);
-				removeEventListener("click", clickHandler);
-			}, 150);
-		};
-		a.addEventListener("click", clickHandler, false);
-		a.click();
-		// note that a is never added to the DOM
-	}
-
 	function handleDownload() {
 		if (!cal) return;
-		const blob = new Blob([eventsToIcs(cal.events)], { type: "text/calendar" });
-		downloadBlob(blob, `${cal.title} - UW-Madison.ics`);
+		downloadFile(eventsToIcs(cal.events), "text/calendar", `${cal.title} - UW-Madison.ics`);
 	}
 
 	// TODO: doesn't handle debouncing
