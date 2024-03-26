@@ -7,7 +7,7 @@
 		scheduleToCalendar,
 		sheetDataToSchedule,
 	} from "$lib/schedule";
-	import { Heading, Input, Label, Button, Helper, Li, List } from "flowbite-svelte";
+	import { Heading, Input, Label, Button, Helper, Li, List, P } from "flowbite-svelte";
 	import { CalendarMonthSolid } from "flowbite-svelte-icons";
 	let url: string = ""; // @hmr:keep
 	let cal: Calendar | null = null;
@@ -65,7 +65,15 @@
 	}
 </script>
 
-<Heading tag="h2" class="mb-12">Interview to calendar export</Heading>
+<Heading tag="h2" class="mb-4">Interview to calendar export</Heading>
+<P class="mb-2">
+	Enter a URL to a Google Sheets faculty candidate interview schedule, download a calendar file in
+	iCalendar format with the meetings from the schedule.
+</P>
+<P class="mb-8">
+	<span class="font-medium">Note:</span> double-check the results (especially times) before sending to
+	the candidate, since the parsing isn't perfect. You can edit the file by hand if needed.
+</P>
 
 <div class="mb-4">
 	<Label class="mb-2" color={validColor} for="url">Schedule sheet URL</Label>
