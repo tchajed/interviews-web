@@ -16,6 +16,7 @@
 		Helper,
 		Input,
 		Label,
+		P,
 		Progressbar,
 		Table,
 		TableBody,
@@ -125,7 +126,12 @@
 	}
 </script>
 
-<Heading tag="h2" class="mb-12">Interview participation</Heading>
+<Heading tag="h2" class="mb-4">Interview participation</Heading>
+<P class="mb-12">
+	Statistics on how much each faculty member has participated in interviews. Enter the URL for the
+	master schedule, which is how you give permission to access the schedules. All data is fetched by
+	the browser and the server is never involved.
+</P>
 
 <div>
 	<Label class="mb-2" color={validColor} for="url">Master schedule URL</Label>
