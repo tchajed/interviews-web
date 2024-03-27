@@ -151,11 +151,14 @@
 	{/if}
 	{#if fetchProgress}
 		{@const remaining = fetchProgress.total - fetchProgress.sheets}
-		<span class="text-gray-500">Fetching {remaining} sheets...</span>
-		<Progressbar progress={Math.round((fetchProgress.sheets / fetchProgress.total) * 100)} />
+		{@const percentDone = Math.round((fetchProgress.sheets / fetchProgress.total) * 100)}
+		<span class="text-gray-500">
+			Fetching {remaining} sheet{#if remaining != 1}s{/if}...
+		</span>
+		<Progressbar progress={percentDone} />
 	{:else if counts}
 		<Button size="sm" on:click={handleDownload} class="mb-4">Download TSV</Button>
-		<Table hoverable={true}>
+		<Table striped={true}>
 			<TableHead theadClass="divide-y">
 				{#each ["name", "total", "1:1", "breakfast", "lunch", "dinner"] as key}
 					<TableHeadCell class="cursor-pointer" on:click={() => sortTable(key)}>
