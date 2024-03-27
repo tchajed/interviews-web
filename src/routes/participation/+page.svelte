@@ -27,6 +27,7 @@
 	} from "flowbite-svelte";
 	import { CaretUpSolid, CaretDownSolid } from "flowbite-svelte-icons";
 	import { writable, type Writable } from "svelte/store";
+	import { slide } from "svelte/transition";
 	let url: string = "";
 	let fetchError: string | null = null;
 	let fetchProgress: { sheets: number; total: number } | null = null;
@@ -124,6 +125,11 @@
 			`interview-participation-${date}.tsv`,
 		);
 	}
+
+	let openRow: number | null = null;
+	const toggleRow = (i: number) => {
+		openRow = openRow == i ? null : i;
+	};
 </script>
 
 <Heading tag="h2" class="mb-4">Interview participation</Heading>
@@ -173,8 +179,8 @@
 				{/each}
 			</TableHead>
 			<TableBody>
-				{#each $sortItems as count}
-					<TableBodyRow>
+				{#each $sortItems as count, idx}
+					<TableBodyRow on:click={() => toggleRow(idx)}>
 						<TableBodyCell>{count.name}</TableBodyCell>
 						<TableBodyCell>{count.total}</TableBodyCell>
 						<TableBodyCell>{count.counts.get("1:1") || 0}</TableBodyCell>
@@ -182,6 +188,22 @@
 						<TableBodyCell>{count.counts.get("lunch") || 0}</TableBodyCell>
 						<TableBodyCell>{count.counts.get("dinner") || 0}</TableBodyCell>
 					</TableBodyRow>
+					{#if idx == openRow}
+						<TableBodyRow>
+							<TableBodyCell colspan="6" class="p-0">
+								<div
+									class="mx-6 text-sm font-normal text-gray-600"
+									transition:slide={{ duration: 300, axis: "y" }}
+								>
+									{#each count.events as ev}
+										{ev.candidate}
+										{ev.type}
+										<br />
+									{/each}
+								</div>
+							</TableBodyCell>
+						</TableBodyRow>
+					{/if}
 				{/each}
 			</TableBody>
 		</Table>

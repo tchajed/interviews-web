@@ -14,9 +14,10 @@ export type ParticipationEvent = {
 /** Aggregate participation for one faculty member. */
 export type ParticipationCount = {
 	name: string; // of the faculty
-	total: number;
+	total: number; // redundant aggregation of counts
 	counts: Map<PartType, number>;
-	candidates: string[];
+	candidates: string[]; // redundant aggregation of events
+	events: ParticipationEvent[];
 };
 
 export function getScheduleSheets(masterHtml: string): string[] {
@@ -170,29 +171,35 @@ function normalizeNames(events: ParticipationEvent[]) {
 }
 
 function aggregateParticipation(events: ParticipationEvent[]): ParticipationCount[] {
-	const counts: Map<string, { types: Map<PartType, number>; candidates: string[] }> = new Map();
+	const counts: Map<string, { types: Map<PartType, number>; events: ParticipationEvent[] }> =
+		new Map();
 	for (const event of events) {
-		const { name, type, candidate } = event;
+		const { name, type } = event;
 		if (!counts.has(name)) {
-			counts.set(name, { types: new Map(), candidates: [] });
+			counts.set(name, { types: new Map(), events: [] });
 		}
 		const thisCount = counts.get(name);
 		if (!thisCount) {
 			throw new Error("assertion failed: did not initialize counts");
 		}
-		const { types, candidates } = thisCount;
+		const { types } = thisCount;
 		types.set(type, (types.get(type) || 0) + 1);
-		if (!candidates.includes(candidate)) {
-			candidates.push(candidate);
-		}
+		thisCount.events.push(event);
 	}
 	const countList: ParticipationCount[] = [];
 	for (const [name, count] of counts) {
+		const candidates: string[] = [];
+		for (const ev of count.events) {
+			if (!candidates.includes(ev.candidate)) {
+				candidates.push(ev.candidate);
+			}
+		}
 		countList.push({
 			name,
 			total: totalCount(count.types),
 			counts: count.types,
-			candidates: count.candidates,
+			candidates: candidates,
+			events: count.events,
 		});
 	}
 	return countList;
