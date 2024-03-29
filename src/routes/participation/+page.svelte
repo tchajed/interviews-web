@@ -1,7 +1,7 @@
 <script lang="ts">
+	// @hmr:keep-all
 	import { downloadFile } from "$lib/download";
 
-	// @hmr:keep-all
 	import { fetchSheetHtml } from "$lib/fetch_sheet";
 	import {
 		getParticipation,

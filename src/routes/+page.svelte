@@ -1,4 +1,5 @@
 <script lang="ts">
+	// @hmr:keep-all
 	import { downloadFile } from "$lib/download";
 	import { fetchSheetTsv } from "$lib/fetch_sheet";
 	import {
@@ -9,7 +10,7 @@
 	} from "$lib/schedule";
 	import { Heading, Input, Label, Button, Helper, Li, List, P } from "flowbite-svelte";
 	import { CalendarMonthSolid } from "flowbite-svelte-icons";
-	let url: string = ""; // @hmr:keep
+	let url: string = "";
 	let cal: Calendar | null = null;
 	let fetchError: string | null = null;
 	let validColor: "green" | "red" | undefined = undefined;
@@ -103,21 +104,25 @@
 		</Helper>
 	{/if}
 </div>
-<div class="mb-6">
-	<Button disabled={cal == null} on:click={handleDownload}>
-		<CalendarMonthSolid class="me-2 h-4 w-4" />
-		Download ICS
-	</Button>
-</div>
+<Button disabled={cal == null} on:click={handleDownload} class="mb-6">
+	<CalendarMonthSolid class="me-2 h-4 w-4" />
+	Download ICS
+</Button>
 {#if cal}
-	<Heading tag="h4" class="mb-4">{cal.title} &mdash; {formatDate(cal.events[0].startTime)}</Heading>
-	<List tag="ul" class="space-y-1 text-gray-500">
+	<Heading tag="h4" class="mb-2">{cal.title} &mdash; {formatDate(cal.events[0].startTime)}</Heading>
+	<List tag="ul" list="none" class="space-y-1">
 		{#each cal.events as event}
 			<Li>
-				{formatTime(event.startTime)}-{formatTime(event.endTime)} &mdash;
-				<span class="font-medium">{event.title}</span>
-				{#if event.location != ""}
-					&mdash; {event.location}
+				<P>
+					{formatTime(event.startTime)}-{formatTime(event.endTime)}
+					&mdash;
+					<span class="font-medium">{event.title}</span>
+				</P>
+				{#if event.location}
+					<P class="text-gray-500">{event.location}</P>
+				{/if}
+				{#if event.description}
+					<P class="text-gray-500">{event.description}</P>
 				{/if}
 			</Li>
 		{/each}
