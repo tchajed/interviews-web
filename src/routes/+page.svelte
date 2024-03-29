@@ -71,8 +71,9 @@
 	iCalendar format with the meetings from the schedule.
 </P>
 <P class="mb-8">
-	<span class="font-medium">Note:</span> double-check the results (especially times) before sending to
-	the candidate, since the parsing isn't perfect. You can edit the file by hand if needed.
+	<span class="font-medium">Note:</span> double-check the results (especially times), since the parsing
+	isn't perfect, and some information might only be in the notes column. You can edit the file by hand
+	if needed.
 </P>
 
 <div class="mb-4">
