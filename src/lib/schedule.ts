@@ -59,6 +59,21 @@ function timeRangeToIcal(eventDate: Date, timeRange: string): { start: Date; end
 	return { start, end };
 }
 
+function getDinnerStart(notes: string): { h: number; m: number } | null {
+	// try to get a time from the notes
+	let m = /[0-9]+:[0-9]+/.exec(notes);
+	if (m) {
+		const time = parseTime(m[0]);
+		return time;
+	} else {
+		m = /[0-9]+(pm|PM)/.exec(notes);
+		if (m) {
+			const time = { h: parseInt(m[0]) + 12, m: 0 };
+			return time;
+		}
+	}
+}
+
 export function sheetDataToSchedule(data: string[][]): Schedule {
 	// cell A1
 	const title = data[0][0];
@@ -124,26 +139,15 @@ export function scheduleToCalendar(schedule: Schedule): Calendar {
 		}
 		let startEnd: { start: Date; end: Date };
 		if (timeRange == "DINNER") {
-			// try to get a time from the notes
-			let m = /[0-9]+:[0-9]+/.exec(notes);
-			if (m) {
-				const time = parseTime(m[0]);
+			const time = getDinnerStart(notes);
+			if (time) {
 				startEnd = {
 					start: dateWithTime(eventDate, time),
 					end: dateWithTime(eventDate, { h: time.h + 2, m: time.m }),
 				};
 			} else {
-				m = /[0-9]+(pm|PM)/.exec(notes);
-				if (m) {
-					const time = { h: parseInt(m[0]) + 12, m: 0 };
-					startEnd = {
-						start: dateWithTime(eventDate, time),
-						end: dateWithTime(eventDate, { h: time.h + 2, m: time.m }),
-					};
-				} else {
-					warnings.push("could not find time for dinner");
-					continue;
-				}
+				warnings.push("could not find time for dinner");
+				continue;
 			}
 		} else {
 			if (!timeRange.includes("-")) {
