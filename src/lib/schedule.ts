@@ -72,6 +72,7 @@ function getDinnerStart(notes: string): { h: number; m: number } | null {
 			return time;
 		}
 	}
+	return null;
 }
 
 export function sheetDataToSchedule(data: string[][]): Schedule {
