@@ -1,14 +1,12 @@
 import eslintPluginSvelte from "eslint-plugin-svelte";
 import svelteConfig from "./svelte.config.js";
 export default [
+  {
+    ignores: ["build/", ".svelte-kit/"],
+  },
 	...eslintPluginSvelte.configs["flat/recommended"],
 	{
-		files: [
-			"**/*.svelte",
-			"*.svelte",
-			// Add more files if you need.
-			// '**/*.svelte.ts', '*.svelte.ts', '**/*.svelte.js', '*.svelte.js',
-		],
+		files: ["**/*.svelte"],
 		languageOptions: {
 			parserOptions: {
 				svelteConfig,
