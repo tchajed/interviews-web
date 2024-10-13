@@ -11,13 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
       - name: Install node.js
         uses: actions/setup-node@v4
         with:
           cache: pnpm
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       - name: Build
         run: pnpm run build
       - name: Lint
