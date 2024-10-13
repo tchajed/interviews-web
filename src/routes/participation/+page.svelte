@@ -190,7 +190,7 @@
 					</TableBodyRow>
 					{#if idx == openRow}
 						<TableBodyRow>
-							<TableBodyCell colspan="6" class="p-0">
+							<TableBodyCell colspan={6} class="p-0">
 								<div
 									class="mx-6 text-sm font-normal text-gray-600"
 									transition:slide={{ duration: 300, axis: "y" }}
