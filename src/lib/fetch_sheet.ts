@@ -10,7 +10,7 @@ function parseSheetId(url: string): { id: string } | { error: string } {
 }
 
 function parseSheetUrl(url: string): { id: string; gid: string } | { error: string } {
-	const re = new RegExp("^https://docs.google.com/spreadsheets/d/([^/]+)/edit#gid=([0-9]+)");
+	const re = new RegExp("^https://docs.google.com/spreadsheets/d/([^/]+)/edit(?:\\?gid=[0-9]+)?#gid=([0-9]+)");
 	const m = re.exec(url);
 	if (!m) {
 		const parsed = parseSheetId(url);
