@@ -1,10 +1,12 @@
 # Faculty interview web tools
 
-[![Build and test](https://github.com/tchajed/interviews-web/actions/workflows/build.yml/badge.svg)](https://github.com/tchajed/interviews-web/actions/workflows/build.yml)
+[![build & deploy](https://github.com/tchajed/interviews-web/actions/workflows/build.yml/badge.svg)](https://github.com/tchajed/interviews-web/actions/workflows/build.yml)
 
-[Schedule to ICS](https://www.chajed.io/interviews/)
+This site has two tools:
 
-[Interview participation](https://www.chajed.io/interviews/participation.html)
+[Schedule to ICS](https://tchajed.github.io/interviews-web) creates an ICS file with all of a candidate's meetings, so they can add them to their calendar if desired.
+
+[Interview participation](https://tchajed.github.io/interviews-web/participation) aggregates all the interview schedules to show how much each faculty is doing.
 
 ## Developing
 
@@ -13,9 +15,8 @@
 - `pnpm run lint`
 - `pnpm run test`
 
+We use Svelte with fully static page rendering, the Flowbite component library, and Tailwind CSS.
+
 ## Deploying
 
-```sh
-pnpm run build
-rsync -a --delete build/ ~/code/personal-website/docs/interviews/
-```
+The server is automatically deployed with GitHub Pages.
