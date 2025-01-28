@@ -20,6 +20,20 @@ export type ParticipationCount = {
 	events: ParticipationEvent[];
 };
 
+/** Get the document id from a Google Docs URL (the component after /d/). Does not include gid, so identifies a document and not a particular sheet. */
+export function getDocsId(url: string): string | null {
+	const re = new RegExp("^https://docs.google.com/spreadsheets/d/([^/]+)");
+	const m = re.exec(url);
+	if (!m) {
+		return null;
+	}
+	return m[1];
+}
+
+export function docsIdToUrl(id: string): string {
+	return `https://docs.google.com/spreadsheets/d/${id}/edit`;
+}
+
 export function getScheduleSheets(masterHtml: string): string[] {
 	const parser = new DOMParser();
 	const doc = parser.parseFromString(masterHtml, "text/html");

@@ -9,6 +9,8 @@
 		getScheduleSheets,
 		countsToTsv,
 		type PartType,
+		getDocsId,
+		docsIdToUrl,
 	} from "$lib/participation";
 	import {
 		Button,
@@ -26,12 +28,20 @@
 		TableHeadCell,
 	} from "flowbite-svelte";
 	import { CaretUpSolid, CaretDownSolid } from "flowbite-svelte-icons";
+	import { onMount } from "svelte";
 	import { writable, type Writable } from "svelte/store";
 	import { slide } from "svelte/transition";
 	let url: string = "";
 	let fetchError: string | null = null;
 	let fetchProgress: { sheets: number; total: number } | null = null;
 	let counts: ParticipationCount[] | null = null;
+
+	// note: only uses hash on initial load, we're not listening for the hashchange event
+	onMount(() => {
+		if (document.location.hash != "") {
+			url = docsIdToUrl(document.location.hash.slice(1));
+		}
+	});
 
 	const sortKey: Writable<string> = writable("total");
 	const sortItems: Writable<ParticipationCount[]> = writable((counts || []).slice());
@@ -82,6 +92,10 @@
 			counts = null;
 		} else {
 			fetchError = null;
+			const docId = getDocsId(url);
+			if (docId && docId != document.location.hash) {
+				document.location.hash = docId;
+			}
 			fetchSheetHtml(url, "Schedule")
 				.then((html) => {
 					fetchParticipation(html).then((c) => {
