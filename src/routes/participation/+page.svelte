@@ -14,6 +14,7 @@
 	} from "$lib/participation";
 	import {
 		Button,
+		Footer,
 		Heading,
 		Helper,
 		Input,
@@ -223,3 +224,14 @@
 		</Table>
 	{/if}
 </div>
+
+<Footer class="mt-12">
+	<div class="flex justify-end">
+		<a
+			href="https://github.com/tchajed/interviews-web"
+			class="text-gray-600 hover:underline dark:text-gray-500"
+		>
+			GitHub source
+		</a>
+	</div>
+</Footer>
