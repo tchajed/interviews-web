@@ -153,6 +153,7 @@
 	master schedule, which is how you give permission to access the schedules. All data is fetched by
 	the browser and the server is never involved.
 </P>
+<P class="mb-12">Click on a row to see the signups for that faculty member.</P>
 
 <div>
 	<Label class="mb-2" color={validColor} for="url">Master schedule URL</Label>
