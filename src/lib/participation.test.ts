@@ -5,6 +5,7 @@ import {
 	getParticipation,
 	countsToTsv,
 	type ParticipationCount,
+	getNames,
 } from "./participation";
 
 describe("docs id handling", () => {
@@ -49,5 +50,24 @@ describe("participation aggregation", () => {
 		expect(tsv).toContain("Test Faculty");
 		expect(tsv).toContain("Candidate 1, Candidate 2");
 		expect(tsv.split("\n").length).toBeGreaterThan(1);
+	});
+});
+
+describe("name parsing", () => {
+	it("splits names with various separators", () => {
+		expect(getNames("John Smith, Jane Doe")).toEqual(["John Smith", "Jane Doe"]);
+	});
+
+	it("filters out special entries", () => {
+		expect(getNames("BREAK")).toEqual([]);
+		expect(getNames("graduate students")).toEqual([]);
+		expect(getNames("Alan Turing, graduate students")).toEqual(["Alan Turing"]);
+		expect(getNames("Alan Turing + ?")).toEqual(["Alan Turing"]);
+		expect(getNames("John Smith, ...")).toEqual(["John Smith"]);
+	});
+
+	it("handles whitespace", () => {
+		expect(getNames(" John Smith ")).toEqual(["John Smith"]);
+		expect(getNames("John Smith,   Jane Doe")).toEqual(["John Smith", "Jane Doe"]);
 	});
 });

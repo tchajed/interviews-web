@@ -82,22 +82,30 @@ function classifyEvent(row: ScheduleRow): PartType {
 }
 
 const IgnoredNamesRe = new RegExp(
-	`(?:BREAK|TALK|TALK PREP|LUNCH|DINNER)|(?:^$)|(grad(?:uate)? student.*)`,
+	`(?:BREAK|TALK|TALK PREP|LUNCH|DINNER)|(?:^$)|(grad(?:uate)? student.*)|\\?|(\\.\\.\\.)`,
 	"i",
 );
 
 const NameSepRe = new RegExp("\\s*(?:[,+;&])|(?:\\band\\b)\\s*");
+
+export function getNames(person: string): string[] {
+	const names: string[] = [];
+	person.split(NameSepRe).forEach((name) => {
+		name = name.trim();
+		if (IgnoredNamesRe.test(name)) {
+			return;
+		}
+		names.push(name);
+	});
+	return names;
+}
 
 function getParticipationForSchedule(sched: Schedule): ParticipationEvent[] {
 	const events: ParticipationEvent[] = [];
 	const candidate = sched.title.replace(/^Schedule for /i, "").trim();
 	for (const event of sched.events) {
 		const type = classifyEvent(event);
-		event.person.split(NameSepRe).forEach((name) => {
-			name = name.trim();
-			if (IgnoredNamesRe.test(name)) {
-				return;
-			}
+		getNames(event.person).forEach((name) => {
 			events.push({ name, type, candidate });
 		});
 	}
