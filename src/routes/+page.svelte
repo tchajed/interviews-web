@@ -13,15 +13,15 @@
 	let url: string = "";
 	let cal: Calendar | null = null;
 	let fetchError: string | null = null;
-	let validColor: "green" | "red" | undefined = undefined;
-	$: {
+
+	function validColor(): "green" | "red" | undefined {
 		if (cal) {
-			validColor = "green";
+			return "green";
 		} else {
 			if (fetchError) {
-				validColor = "red";
+				return "red";
 			} else {
-				validColor = undefined;
+				return undefined;
 			}
 		}
 	}
@@ -49,7 +49,7 @@
 
 	// TODO: doesn't handle debouncing
 	$: if (url != "") {
-		fetchError = null;
+		$fetchError = null;
 		// TODO: handle and report errors
 		fetchSheetTsv(url)
 			.then((data) => {
@@ -78,19 +78,19 @@
 </P>
 
 <div class="mb-4">
-	<Label class="mb-2" color={validColor} for="url">Schedule sheet URL</Label>
+	<Label class="mb-2" color={validColor()} for="url">Schedule sheet URL</Label>
 	<Input
 		type="text"
 		bind:value={url}
 		id="url"
 		name="url"
-		color={validColor}
+		color={validColor()}
 		size="sm"
 		placeholder="https://docs.google.com/..."
 		required
 	/>
 	{#if cal}
-		{#each cal.warnings as warning}
+		{#each cal.warnings as warning, i (i)}
 			<Helper class="mt-2" color="red">
 				<span class="font-medium">Warning:</span>
 				{warning}
@@ -111,7 +111,7 @@
 {#if cal}
 	<Heading tag="h4" class="mb-2">{cal.title} &mdash; {formatDate(cal.events[0].startTime)}</Heading>
 	<List tag="ul" list="none" class="space-y-1">
-		{#each cal.events as event}
+		{#each cal.events as event, i (i)}
 			<Li>
 				<P>
 					{formatTime(event.startTime)}-{formatTime(event.endTime)}

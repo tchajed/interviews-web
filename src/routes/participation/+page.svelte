@@ -182,7 +182,7 @@
 		<Button size="sm" on:click={handleDownload} class="mb-4">Download TSV</Button>
 		<Table striped={true}>
 			<TableHead theadClass="divide-y">
-				{#each ["name", "total", "1:1", "breakfast", "lunch", "dinner"] as key}
+				{#each ["name", "total", "1:1", "breakfast", "lunch", "dinner"] as key (key)}
 					<TableHeadCell class="cursor-pointer" on:click={() => sortTable(key)}>
 						<span class="inline-flex items-center">
 							{key.toUpperCase()}
@@ -195,7 +195,7 @@
 				{/each}
 			</TableHead>
 			<TableBody>
-				{#each $sortItems as count, idx}
+				{#each $sortItems as count, idx (idx)}
 					<TableBodyRow on:click={() => toggleRow(idx)}>
 						<TableBodyCell>{count.name}</TableBodyCell>
 						<TableBodyCell>{count.total}</TableBodyCell>
@@ -211,7 +211,7 @@
 									class="mx-6 text-sm font-normal text-gray-600"
 									transition:slide={{ duration: 300, axis: "y" }}
 								>
-									{#each count.events as ev}
+									{#each count.events as ev, i (i)}
 										{ev.candidate}
 										{ev.type}
 										<br />
