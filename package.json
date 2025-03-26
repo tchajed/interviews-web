@@ -20,7 +20,7 @@
 		"@types/eslint": "^9.6.1",
 		"@types/node": "^22.13.10",
 		"@typescript-eslint/eslint-plugin": "^8.26.1",
-		"@typescript-eslint/parser": "^8.26.1",
+		"@typescript-eslint/parser": "^8.28.0",
 		"autoprefixer": "^10.4.21",
 		"cookie": "^1.0.2",
 		"esbuild": "^0.25.1",
