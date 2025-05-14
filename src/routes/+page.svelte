@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from "svelte/legacy";
+
 	// @hmr:keep-all
 	import { downloadFile } from "$lib/download";
 	import { fetchSheetTsv } from "$lib/fetch_sheet";
@@ -10,11 +12,11 @@
 	} from "$lib/schedule";
 	import { Heading, Input, Label, Button, Helper, Li, List, P } from "flowbite-svelte";
 	import { CalendarMonthSolid } from "flowbite-svelte-icons";
-	let url: string = "";
-	let cal: Calendar | null = null;
-	let fetchError: string | null = null;
+	let url: string = $state("");
+	let cal: Calendar | null = $state(null);
+	let fetchError: string | null = $state(null);
 
-	function validColor(): "green" | "red" | undefined {
+	let validColor: "green" | "red" | undefined = $derived.by(() => {
 		if (cal) {
 			return "green";
 		} else {
@@ -24,7 +26,7 @@
 				return undefined;
 			}
 		}
-	}
+	});
 
 	function formatTime(d: Date): string {
 		let h = d.getHours();
@@ -48,22 +50,24 @@
 	}
 
 	// TODO: doesn't handle debouncing
-	$: if (url != "") {
-		$fetchError = null;
-		// TODO: handle and report errors
-		fetchSheetTsv(url)
-			.then((data) => {
-				cal = scheduleToCalendar(sheetDataToSchedule(data));
-			})
-			.catch((err) => {
-				cal = null;
-				if (err instanceof Error) {
-					fetchError = err.message;
-				} else {
-					fetchError = "Unknown error";
-				}
-			});
-	}
+	$effect(() => {
+		if (url != "") {
+			fetchError = null;
+			// TODO: handle and report errors
+			fetchSheetTsv(url)
+				.then((data) => {
+					cal = scheduleToCalendar(sheetDataToSchedule(data));
+				})
+				.catch((err) => {
+					cal = null;
+					if (err instanceof Error) {
+						fetchError = err.message;
+					} else {
+						fetchError = "Unknown error";
+					}
+				});
+		}
+	});
 </script>
 
 <Heading tag="h2" class="mb-4">Interview to calendar export</Heading>
@@ -78,13 +82,13 @@
 </P>
 
 <div class="mb-4">
-	<Label class="mb-2" color={validColor()} for="url">Schedule sheet URL</Label>
+	<Label class="mb-2" color={validColor} for="url">Schedule sheet URL</Label>
 	<Input
 		type="text"
 		bind:value={url}
 		id="url"
 		name="url"
-		color={validColor()}
+		color={validColor}
 		size="sm"
 		placeholder="https://docs.google.com/..."
 		required

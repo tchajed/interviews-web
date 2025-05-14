@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { run } from "svelte/legacy";
+
 	// @hmr:keep-all
 	import { downloadFile } from "$lib/download";
 
@@ -32,10 +34,10 @@
 	import { onMount } from "svelte";
 	import { writable, type Writable } from "svelte/store";
 	import { slide } from "svelte/transition";
-	let url: string = "";
-	let fetchError: string | null = null;
-	let fetchProgress: { sheets: number; total: number } | null = null;
-	let counts: ParticipationCount[] | null = null;
+	let url: string = $state("");
+	let fetchError: string | null = $state(null);
+	let fetchProgress: { sheets: number; total: number } | null = $state(null);
+	let counts: ParticipationCount[] | null = $state(null);
 
 	// note: only uses hash on initial load, we're not listening for the hashchange event
 	onMount(() => {
@@ -45,7 +47,9 @@
 	});
 
 	const sortKey: Writable<string> = writable("total");
-	const sortItems: Writable<ParticipationCount[]> = writable((counts || []).slice());
+	const sortItems: ParticipationCount[] = $derived.by(() => {
+		return getSortedTable(counts || [], $sortKey);
+	});
 
 	// Define a function to sort the items
 	const sortTable = (key: string) => {
@@ -70,45 +74,17 @@
 		});
 	}
 
-	$: {
-		sortItems.set(getSortedTable(counts || [], $sortKey));
-	}
-
-	let validColor: "green" | "red" | undefined = undefined;
-	$: {
+	let validColor: "green" | "red" | undefined = $derived.by(() => {
 		if (fetchProgress || counts != null) {
-			validColor = "green";
+			return "green";
 		} else {
 			if (fetchError != null) {
-				validColor = "red";
+				return "red";
 			} else {
-				validColor = undefined;
+				return undefined;
 			}
 		}
-	}
-
-	$: {
-		if (url == "") {
-			fetchError = null;
-			counts = null;
-		} else {
-			fetchError = null;
-			const docId = getDocsId(url);
-			if (docId && docId != document.location.hash) {
-				document.location.hash = docId;
-			}
-			fetchSheetHtml(url, "Schedule")
-				.then((html) => {
-					fetchParticipation(html).then((c) => {
-						counts = c;
-					});
-				})
-				.catch((err) => {
-					fetchError = err.message;
-					counts = null;
-				});
-		}
-	}
+	});
 
 	async function fetchParticipation(html: string): Promise<ParticipationCount[]> {
 		const urls = getScheduleSheets(html);
@@ -141,10 +117,32 @@
 		);
 	}
 
-	let openRow: number | null = null;
+	let openRow: number | null = $state(null);
 	const toggleRow = (i: number) => {
 		openRow = openRow == i ? null : i;
 	};
+	$effect(() => {
+		if (url == "") {
+			fetchError = null;
+			counts = null;
+		} else {
+			fetchError = null;
+			const docId = getDocsId(url);
+			if (docId && docId != document.location.hash) {
+				document.location.hash = docId;
+			}
+			fetchSheetHtml(url, "Schedule")
+				.then((html) => {
+					fetchParticipation(html).then((c) => {
+						counts = c;
+					});
+				})
+				.catch((err) => {
+					fetchError = err.message;
+					counts = null;
+				});
+		}
+	});
 </script>
 
 <Heading tag="h2" class="mb-4">Interview participation</Heading>
@@ -195,7 +193,7 @@
 				{/each}
 			</TableHead>
 			<TableBody>
-				{#each $sortItems as count, idx (idx)}
+				{#each sortItems as count, idx (idx)}
 					<TableBodyRow on:click={() => toggleRow(idx)}>
 						<TableBodyCell>{count.name}</TableBodyCell>
 						<TableBodyCell>{count.total}</TableBodyCell>
