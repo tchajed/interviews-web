@@ -23,7 +23,7 @@
 		"@typescript-eslint/parser": "^8.38.0",
 		"autoprefixer": "^10.4.21",
 		"cookie": "^1.0.2",
-		"esbuild": "^0.25.7",
+		"esbuild": "^0.25.8",
 		"eslint": "^9.31.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.11.0",
