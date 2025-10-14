@@ -18,11 +18,11 @@ jobs:
     env:
       BASE_PATH: "/${{ github.event.repository.name }}"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install pnpm
         uses: pnpm/action-setup@v4
       - name: Install node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           cache: pnpm
       - name: Install dependencies
@@ -34,7 +34,7 @@ jobs:
       - name: Test
         run: pnpm run test --run
       - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         if: github.ref == 'refs/heads/main'
         with:
           path: ./build
