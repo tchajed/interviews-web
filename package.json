@@ -13,7 +13,7 @@
 		"fmt": "prettier --write . --log-level error"
 	},
 	"devDependencies": {
-		"@sveltejs/adapter-auto": "^6.1.1",
+		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.46.5",
 		"@sveltejs/vite-plugin-svelte": "^4.0.4",
